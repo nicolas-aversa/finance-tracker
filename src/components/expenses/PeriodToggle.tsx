@@ -1,23 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
-const MONTH_NAMES = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-];
-const MONTH_SHORT = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-
-export function monthDisplay(month: string): string {
-  const [y, m] = month.split("-");
-  return `${MONTH_NAMES[Number(m) - 1]} ${y}`;
-}
-
-function monthShort(month: string): string {
-  const [, m] = month.split("-");
-  const label = MONTH_SHORT[Number(m) - 1] ?? month;
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
+import { monthShort } from "@/lib/expenses/months";
 
 /**
  * Segmented control: [Resumen] [Mayo] [Junio] … — Resumen (accumulated) first,
@@ -27,10 +11,18 @@ export function PeriodToggle({
   months,
   active,
   basePath = "/gastos",
+  hrefs,
 }: {
   months: string[]; // any order; displayed ascending
   active: string; // a "yyyy-mm" or "resumen"
   basePath?: string;
+  /**
+   * Precomputed href per pill value ("resumen" | "yyyy-mm"), letting a filtered
+   * page keep its other filters when switching month. A plain record rather
+   * than a callback because this is a Client Component — functions can't cross
+   * the server/client boundary.
+   */
+  hrefs?: Record<string, string>;
 }) {
   const ordered = [...new Set(months)].sort();
   const pills: { value: string; label: string }[] = [
@@ -45,7 +37,7 @@ export function PeriodToggle({
         return (
           <Link
             key={p.value}
-            href={`${basePath}?mes=${p.value}`}
+            href={hrefs?.[p.value] ?? `${basePath}?mes=${p.value}`}
             scroll={false}
             aria-current={isActive ? "page" : undefined}
             className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium transition-colors ${

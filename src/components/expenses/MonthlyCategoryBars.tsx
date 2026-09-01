@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatArs } from "@/lib/format";
-import { monthDisplay } from "./PeriodToggle";
+import { monthDisplay } from "@/lib/expenses/months";
 import type { MonthStack } from "@/lib/expenses/aggregate";
 
 const MONTH_LABELS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];

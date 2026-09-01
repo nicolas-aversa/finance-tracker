@@ -7,14 +7,18 @@ const BASE_LINK_CLASS = "flex flex-1 flex-col items-center gap-0.5 py-2.5 text-x
 const INACTIVE_CLASS = "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100";
 const ACTIVE_CLASS = "text-accent";
 
-const INVESTMENT_TABS = [
+type Tab = { href: string; label: string; icon: string; exact?: boolean; alsoMatch?: string[] };
+
+const INVESTMENT_TABS: Tab[] = [
   { href: "/", label: "Dashboard", icon: "📊", exact: true },
   { href: "/add", label: "Cargar", icon: "➕" },
   { href: "/log", label: "Historial", icon: "📜" },
 ];
 
-const EXPENSE_TABS = [
-  { href: "/gastos", label: "Resumen", icon: "📊", exact: true },
+const EXPENSE_TABS: Tab[] = [
+  // The detail pages hang off "Resumen" so the bar always has something lit;
+  // they get no tab of their own to keep the bar at four comfortable slots.
+  { href: "/gastos", label: "Resumen", icon: "📊", alsoMatch: ["/gastos/categoria", "/gastos/presupuestos"] },
   { href: "/gastos/subir", label: "Subir", icon: "⬆️" },
   { href: "/gastos/movimientos", label: "Movimientos", icon: "📜" },
 ];
@@ -29,7 +33,10 @@ export function BottomNav() {
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
       {tabs.map((tab) => {
-        const isActive = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+        const isActive =
+          pathname === tab.href ||
+          (!tab.exact && !tab.alsoMatch && pathname.startsWith(tab.href)) ||
+          (tab.alsoMatch?.some((p) => pathname.startsWith(p)) ?? false);
         return (
           <Link key={tab.href} href={tab.href} className={`${BASE_LINK_CLASS} ${isActive ? ACTIVE_CLASS : INACTIVE_CLASS}`}>
             <span className="text-lg">{tab.icon}</span>

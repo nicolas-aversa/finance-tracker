@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { tickerColor } from "@/lib/domain/chart-colors";
 import { formatArs } from "@/lib/format";
 import type { CategorySlice } from "@/lib/expenses/aggregate";
@@ -17,7 +18,13 @@ function arc(a0: number, a1: number): string {
   return `M ${os.x} ${os.y} A ${OUTER_R} ${OUTER_R} 0 ${large} 1 ${oe.x} ${oe.y} L ${ie.x} ${ie.y} A ${INNER_R} ${INNER_R} 0 ${large} 0 ${is.x} ${is.y} Z`;
 }
 
-export function CategoryDonut({ slices }: { slices: CategorySlice[] }) {
+/**
+ * Spend split by category. When `hrefs` maps a category to a URL, its arc and
+ * legend row become links into that category's detail — the aggregated
+ * "Otros (N)" bucket has no entry, so it stays inert.
+ * A plain record, not a callback, so this stays trivially serializable.
+ */
+export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; hrefs?: Record<string, string> }) {
   const positive = slices.filter((s) => s.amountArs > 0);
   if (positive.length === 0) return null;
 
@@ -42,45 +49,79 @@ export function CategoryDonut({ slices }: { slices: CategorySlice[] }) {
 
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Gasto por categoría</h2>
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Gasto por categoría</h2>
+        {hrefs && <span className="text-[11px] text-neutral-400 dark:text-neutral-500">tocá para ver el detalle</span>}
+      </div>
       <div className="relative mx-auto mt-3 w-full max-w-[200px]">
         <svg viewBox="0 0 200 200" className="w-full" role="img" aria-label="Gasto por categoría">
-          {arcs.map(({ d, path, color }) => (
-            <path
-              key={d.category}
-              d={path}
-              className="viz-fill"
-              style={{
-                // @ts-expect-error custom props
-                "--viz-light": color.light,
-                "--viz-dark": color.dark,
-              }}
-            >
-              <title>
-                {d.category}: {formatArs(d.amountArs)} ({((d.amountArs / total) * 100).toFixed(0)}%)
-              </title>
-            </path>
-          ))}
+          {arcs.map(({ d, path, color }) => {
+            const share = ((d.amountArs / total) * 100).toFixed(0);
+            const slice = (
+              <path
+                d={path}
+                className={`viz-fill ${hrefs?.[d.category] ? "cursor-pointer transition-opacity hover:opacity-75" : ""}`}
+                style={{
+                  // @ts-expect-error custom props
+                  "--viz-light": color.light,
+                  "--viz-dark": color.dark,
+                }}
+              >
+                <title>
+                  {d.category}: {formatArs(d.amountArs)} ({share}%)
+                </title>
+              </path>
+            );
+            const href = hrefs?.[d.category];
+            return href ? (
+              <Link key={d.category} href={href} aria-label={`Ver ${d.category}`}>
+                {slice}
+              </Link>
+            ) : (
+              <g key={d.category}>{slice}</g>
+            );
+          })}
         </svg>
       </div>
-      <ul className="mt-4 flex flex-col gap-2">
-        {arcs.map(({ d, color }) => (
-          <li key={d.category} className="flex items-center gap-2 text-sm">
-            <span
-              className="viz-mark h-3 w-3 shrink-0 rounded-full"
-              style={{
-                // @ts-expect-error custom props
-                "--viz-light": color.light,
-                "--viz-dark": color.dark,
-              }}
-            />
-            <span className="flex-1 truncate font-medium text-neutral-900 dark:text-neutral-100">{d.category}</span>
-            <span className="tabular-nums text-neutral-500 dark:text-neutral-400">{formatArs(d.amountArs)}</span>
-            <span className="w-10 text-right tabular-nums text-neutral-400 dark:text-neutral-500">
-              {((d.amountArs / total) * 100).toFixed(0)}%
-            </span>
-          </li>
-        ))}
+      <ul className="mt-4 flex flex-col gap-1">
+        {arcs.map(({ d, color }) => {
+          const href = hrefs?.[d.category];
+          const row = (
+            <>
+              <span
+                className="viz-mark h-3 w-3 shrink-0 rounded-full"
+                style={{
+                  // @ts-expect-error custom props
+                  "--viz-light": color.light,
+                  "--viz-dark": color.dark,
+                }}
+              />
+              <span className="flex-1 truncate font-medium text-neutral-900 dark:text-neutral-100">{d.category}</span>
+              <span className="tabular-nums text-neutral-500 dark:text-neutral-400">{formatArs(d.amountArs)}</span>
+              <span className="w-10 text-right tabular-nums text-neutral-400 dark:text-neutral-500">
+                {((d.amountArs / total) * 100).toFixed(0)}%
+              </span>
+            </>
+          );
+          return (
+            <li key={d.category}>
+              {href ? (
+                <Link
+                  href={href}
+                  className="-mx-2 flex items-center gap-2 rounded-lg px-2 py-1 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                >
+                  {row}
+                  <span aria-hidden className="text-neutral-300 dark:text-neutral-600">›</span>
+                </Link>
+              ) : (
+                <span className="-mx-2 flex items-center gap-2 px-2 py-1 text-sm">
+                  {row}
+                  <span aria-hidden className="w-2" />
+                </span>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
