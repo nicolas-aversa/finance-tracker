@@ -134,6 +134,20 @@ export const expenseCategories = pgTable("expense_categories", {
 
 export type ExpenseCategory = typeof expenseCategories.$inferSelect;
 
+/**
+ * Monthly spending limit per category. One row per category — the budget
+ * recurs every month rather than being set per-month, which is what a
+ * single-user tracker needs and keeps the key a plain string.
+ */
+export const expenseBudgets = pgTable("expense_budgets", {
+  category: text("category").primaryKey(),
+  amountArs: numeric("amount_ars", { precision: 16, scale: 2 }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ExpenseBudget = typeof expenseBudgets.$inferSelect;
+export type NewExpenseBudget = typeof expenseBudgets.$inferInsert;
+
 /** Keyword → category rules for auto-categorization at import time. */
 export const categoryRules = pgTable(
   "category_rules",

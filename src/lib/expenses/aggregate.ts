@@ -3,11 +3,12 @@ import { toArs, type DomainExpense } from "./types";
 import { tickerColor, OTHER_BUCKET_COLOR } from "@/lib/domain/chart-colors";
 
 /** Payments (paying your bill) aren't spending; everything else is (refunds are negative). */
-function isSpend(e: DomainExpense): boolean {
+export function isSpend(e: DomainExpense): boolean {
   return e.kind !== "payment";
 }
 
-function spendArs(e: DomainExpense, cclRate: number): number {
+/** An expense's amount in ARS-equivalent — the unit every total in this section uses. */
+export function spendArs(e: DomainExpense, cclRate: number): number {
   return toArs(e.amount, e.currency, cclRate);
 }
 
@@ -140,6 +141,75 @@ export function monthlyCategoryStacks(expenses: DomainExpense[], cclRate: number
     const total = segments.reduce((s, x) => s + x.amountArs, 0);
     return { month, total, segments };
   });
+}
+
+export type CategoryDetail = {
+  category: string;
+  totalArs: number;
+  /** Share of the period's total spend, 0..1. */
+  sharePct: number;
+  count: number;
+  /** This category per billing month, oldest first, including months at zero. */
+  monthly: MonthPoint[];
+  topMerchants: MerchantSlice[];
+  /** Change vs the previous month in the series; null when there's nothing to compare. */
+  momDeltaPct: number | null;
+};
+
+/**
+ * Everything the category drill-down page needs. `month` scopes the headline
+ * figures (null = accumulated), while `monthly` always spans the full history
+ * so the trend chart has context.
+ */
+export function categoryDetail(
+  expenses: DomainExpense[],
+  category: string,
+  month: string | null,
+  cclRate: number
+): CategoryDetail {
+  const allMonths = [...new Set(expenses.map((e) => e.billingMonth))].sort();
+
+  const perMonth = new Map<string, number>();
+  for (const e of expenses) {
+    if (!isSpend(e) || e.category !== category) continue;
+    perMonth.set(e.billingMonth, (perMonth.get(e.billingMonth) ?? 0) + spendArs(e, cclRate));
+  }
+  const monthly = allMonths.map((m) => ({ month: m, amountArs: perMonth.get(m) ?? 0 }));
+
+  const inPeriod = expenses.filter(
+    (e) => isSpend(e) && e.category === category && (month === null || e.billingMonth === month)
+  );
+  const totalArs = inPeriod.reduce((s, e) => s + spendArs(e, cclRate), 0);
+
+  const periodTotal = expenses
+    .filter((e) => isSpend(e) && (month === null || e.billingMonth === month))
+    .reduce((s, e) => s + spendArs(e, cclRate), 0);
+
+  const merchantMap = new Map<string, number>();
+  for (const e of inPeriod) {
+    merchantMap.set(e.merchant, (merchantMap.get(e.merchant) ?? 0) + spendArs(e, cclRate));
+  }
+  const topMerchants = [...merchantMap.entries()]
+    .map(([merchant, amountArs]) => ({ merchant, amountArs }))
+    .sort((a, b) => b.amountArs - a.amountArs)
+    .slice(0, 8);
+
+  // Compare the selected month (or the latest one, in the accumulated view)
+  // against the month before it in this category's own series.
+  const idx = month === null ? monthly.length - 1 : monthly.findIndex((p) => p.month === month);
+  const current = idx >= 0 ? monthly[idx].amountArs : 0;
+  const previous = idx > 0 ? monthly[idx - 1].amountArs : null;
+  const momDeltaPct = previous !== null && previous !== 0 ? current / previous - 1 : null;
+
+  return {
+    category,
+    totalArs,
+    sharePct: periodTotal !== 0 ? totalArs / periodTotal : 0,
+    count: inPeriod.length,
+    monthly,
+    topMerchants,
+    momDeltaPct,
+  };
 }
 
 /** Month-over-month change in combined ARS spend for `month` vs the previous month present. */

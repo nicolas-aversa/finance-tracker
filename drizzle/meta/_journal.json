@@ -29,6 +29,13 @@
       "when": 1786226252211,
       "tag": "0003_orange_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788304119276,
+      "tag": "0004_smart_captain_cross",
+      "breakpoints": true
     }
   ]
 }

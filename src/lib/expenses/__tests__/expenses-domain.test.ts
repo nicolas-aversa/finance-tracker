@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { categorizeMerchant, normalizeMerchant, DEFAULT_CATEGORY } from "../categorize";
-import { listMonths, monthlyCategoryStacks, monthlyTotals, monthOverMonth, periodSummary } from "../aggregate";
+import {
+  categoryDetail,
+  listMonths,
+  monthlyCategoryStacks,
+  monthlyTotals,
+  monthOverMonth,
+  periodSummary,
+} from "../aggregate";
 import { computeActiveInstallments, futureCommitmentArs } from "../installments";
 import { billingMonth, monthOf, type DomainExpense } from "../types";
 
@@ -170,5 +177,68 @@ describe("installments", () => {
     const active = computeActiveInstallments(expenses);
     expect(active[0].installmentCurrent).toBe(3);
     expect(active[0].remainingCount).toBe(9);
+  });
+});
+
+describe("categoryDetail", () => {
+  const expenses = [
+    exp({ txDate: "2026-05-10", amount: 8000, category: "Supermercado", merchant: "COTO" }),
+    exp({ txDate: "2026-06-05", amount: 10000, category: "Supermercado", merchant: "COTO" }),
+    exp({ txDate: "2026-06-08", amount: 2000, category: "Supermercado", merchant: "DIA" }),
+    exp({ txDate: "2026-06-20", amount: 5000, category: "Transporte", merchant: "SUBE" }),
+    exp({ txDate: "2026-06-01", amount: 30000, category: "Supermercado", merchant: "SU PAGO", kind: "payment" }),
+  ];
+
+  it("totals only the category, excluding payments", () => {
+    const d = categoryDetail(expenses, "Supermercado", "2026-06", CCL);
+    expect(d.totalArs).toBe(12000); // 10000 + 2000, the payment is not spend
+    expect(d.count).toBe(2);
+  });
+
+  it("computes the share of the period's total spend", () => {
+    const d = categoryDetail(expenses, "Supermercado", "2026-06", CCL);
+    expect(d.sharePct).toBeCloseTo(12000 / 17000, 9); // 17000 = 12000 + 5000 Transporte
+  });
+
+  it("returns a month series covering every month in the data, zero-filled", () => {
+    const d = categoryDetail(expenses, "Transporte", null, CCL);
+    expect(d.monthly).toEqual([
+      { month: "2026-05", amountArs: 0 }, // no Transporte in May
+      { month: "2026-06", amountArs: 5000 },
+    ]);
+  });
+
+  it("compares against the previous month of its own series", () => {
+    const d = categoryDetail(expenses, "Supermercado", "2026-06", CCL);
+    expect(d.momDeltaPct).toBeCloseTo(12000 / 8000 - 1, 9); // +50%
+  });
+
+  it("has no delta when there is no earlier month", () => {
+    expect(categoryDetail(expenses, "Supermercado", "2026-05", CCL).momDeltaPct).toBeNull();
+  });
+
+  it("has no delta when the previous month was zero", () => {
+    expect(categoryDetail(expenses, "Transporte", "2026-06", CCL).momDeltaPct).toBeNull();
+  });
+
+  it("ranks merchants within the category", () => {
+    const d = categoryDetail(expenses, "Supermercado", "2026-06", CCL);
+    expect(d.topMerchants).toEqual([
+      { merchant: "COTO", amountArs: 10000 },
+      { merchant: "DIA", amountArs: 2000 },
+    ]);
+  });
+
+  it("converts USD spend at the CCL rate", () => {
+    const usd = [exp({ txDate: "2026-06-15", amount: 10, currency: "USD", category: "Suscripciones" })];
+    expect(categoryDetail(usd, "Suscripciones", "2026-06", CCL).totalArs).toBe(10 * CCL);
+  });
+
+  it("is all zeroes for a category with no movements", () => {
+    const d = categoryDetail(expenses, "Inexistente", "2026-06", CCL);
+    expect(d.totalArs).toBe(0);
+    expect(d.count).toBe(0);
+    expect(d.sharePct).toBe(0);
+    expect(d.topMerchants).toEqual([]);
   });
 });

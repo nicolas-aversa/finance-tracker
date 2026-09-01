@@ -1,3 +1,5 @@
+import { normalizeText } from "./text";
+
 export type CategoryRule = { pattern: string; category: string; priority: number };
 
 export const DEFAULT_CATEGORY = "Otros";
@@ -8,22 +10,14 @@ export const DEFAULT_CATEGORY = "Otros";
  * Rules are pre-sorted by priority desc by the caller, but we don't rely on it.
  */
 export function categorizeMerchant(merchant: string, rules: CategoryRule[]): string {
-  const haystack = normalize(merchant);
+  const haystack = normalizeText(merchant);
   let best: CategoryRule | null = null;
   for (const rule of rules) {
-    if (haystack.includes(normalize(rule.pattern))) {
+    if (haystack.includes(normalizeText(rule.pattern))) {
       if (!best || rule.priority > best.priority) best = rule;
     }
   }
   return best?.category ?? DEFAULT_CATEGORY;
-}
-
-function normalize(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "") // strip combining accents
-    .toUpperCase()
-    .trim();
 }
 
 const PROCESSOR_PREFIX = /^(MERPAGO|MERCADOPAGO|MP|DLO|PAYU|AR|PAGO|DINERS|PVS|UBER)\s*\*\s*/i;
