@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* Same blue used as categorical slot 1 in the charts — one accent, used everywhere. */
+  --accent: #2a78d6;
+  --accent-hover: #2062b3;
+  --accent-foreground: #ffffff;
+  --accent-soft: #eaf2fc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --accent: #3987e5;
+    --accent-hover: #5c9fec;
+    --accent-foreground: #ffffff;
+    --accent-soft: #12233c;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-base text-neutral-900 outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent-soft dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100;
+  }
+
+  .btn-accent {
+    @apply rounded-xl bg-accent px-4 py-3 text-base font-medium text-accent-foreground shadow-sm shadow-accent/20 transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* Chart marks: color is data-driven per instance via --viz-light/--viz-dark
+     custom properties (set inline), so Tailwind's static class scanner can't
+     see the values — this swaps light/dark without needing arbitrary classes.
+     .viz-mark is for HTML elements (bars, swatches); .viz-fill/.viz-stroke
+     are the SVG equivalents (fill/stroke aren't affected by background-color). */
+  .viz-mark {
+    background-color: var(--viz-light);
+  }
+  .viz-fill {
+    fill: var(--viz-light);
+  }
+  .viz-stroke {
+    stroke: var(--viz-light);
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-mark {
+      background-color: var(--viz-dark);
+    }
+    .viz-fill {
+      fill: var(--viz-dark);
+    }
+    .viz-stroke {
+      stroke: var(--viz-dark);
+    }
+  }
+}
