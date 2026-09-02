@@ -81,7 +81,7 @@ export function BudgetList({
       </div>
 
       <div className="mt-2 flex items-baseline justify-between text-sm">
-        <span className="text-neutral-500 dark:text-neutral-400">
+        <span className="money text-neutral-500 dark:text-neutral-400">
           {formatArs(total.spentArs)} de {formatArs(total.budgetArs)}
         </span>
         <span className={`text-xs font-medium ${TEXT_CLASS[total.status]}`}>
@@ -99,13 +99,13 @@ export function BudgetList({
           >
             <div className="flex items-baseline justify-between gap-2 text-sm">
               <span className="truncate font-medium text-neutral-900 dark:text-neutral-100">{r.category}</span>
-              <span className="shrink-0 tabular-nums text-neutral-700 dark:text-neutral-300">
+              <span className="shrink-0 money tabular-nums text-neutral-700 dark:text-neutral-300">
                 {formatArs(r.spentArs)}
                 <span className="text-neutral-400 dark:text-neutral-500"> / {formatArs(r.budgetArs)}</span>
               </span>
             </div>
             <Bar ratio={r.ratio} status={r.status} />
-            <p className={`mt-1 text-[11px] ${TEXT_CLASS[r.status]}`}>
+            <p className={`money mt-1 text-[11px] ${TEXT_CLASS[r.status]}`}>
               {r.status === "over"
                 ? `te pasaste ${formatArs(-r.remainingArs)}`
                 : `te quedan ${formatArs(r.remainingArs)}`}

@@ -34,7 +34,7 @@ export function IncomeForm({
           defaultValue={amountArs ?? ""}
           placeholder="sin dato"
           aria-label={`Ingreso de ${monthDisplay(month)}`}
-          className="w-32 rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 text-right text-sm tabular-nums text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+          className="money w-32 rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 text-right text-sm tabular-nums text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
         />
         <button
           type="submit"
@@ -44,7 +44,7 @@ export function IncomeForm({
           Guardar
         </button>
       </div>
-      <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
+      <p className="money text-[11px] text-neutral-400 dark:text-neutral-500">
         {state?.error ? (
           <span className="text-red-500">{state.error}</span>
         ) : state?.ok ? (

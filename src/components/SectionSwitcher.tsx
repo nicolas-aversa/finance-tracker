@@ -11,7 +11,7 @@ const SECTIONS = [
 export function SectionSwitcher() {
   const pathname = usePathname();
   return (
-    <div className="mx-auto mb-4 flex w-full max-w-lg gap-1 rounded-2xl bg-neutral-100 p-1 dark:bg-neutral-900">
+    <div className="flex w-full gap-1 rounded-2xl bg-neutral-100 p-1 dark:bg-neutral-900">
       {SECTIONS.map((s) => {
         const active = s.match(pathname);
         return (

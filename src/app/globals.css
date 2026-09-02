@@ -45,6 +45,18 @@ body {
     @apply rounded-xl bg-accent px-4 py-3 text-base font-medium text-accent-foreground shadow-sm shadow-accent/20 transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60;
   }
 
+  /* Privacy toggle: every figure carries .money, and the eye button flips a
+     flag on <html>. Blur rather than a placeholder so the layout never shifts
+     between hidden and shown, and the em-based radius scales with the text —
+     a hero number needs more blur than a table cell to be unreadable. */
+  .money {
+    transition: filter 120ms ease;
+  }
+  [data-hide-amounts="1"] .money {
+    filter: blur(0.35em);
+    user-select: none;
+  }
+
   /* Horizontal pill strips scroll by swipe; a permanent scrollbar under them
      is desktop-only chrome that eats a row of space and reads as a stray line. */
   .no-scrollbar {

@@ -57,7 +57,7 @@ export default async function PresupuestosPage() {
       {totalBudget > 0 && (
         <div className="rounded-2xl border border-neutral-200 bg-white px-5 py-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
           <span className="text-neutral-500 dark:text-neutral-400">Presupuesto mensual total</span>
-          <span className="float-right font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
+          <span className="float-right font-semibold money tabular-nums text-neutral-900 dark:text-neutral-100">
             {formatArs(totalBudget)}
           </span>
         </div>

@@ -12,7 +12,7 @@ export function KpiHeader({ totals }: { totals: PortfolioTotals }) {
         <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
           <div className="min-w-0">
             <div className="text-xs text-neutral-500 dark:text-neutral-400">Valor de la cartera</div>
-            <div className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="money text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
               {formatUsd(totals.marketValueUsd)}
             </div>
           </div>
@@ -24,10 +24,10 @@ export function KpiHeader({ totals }: { totals: PortfolioTotals }) {
         </div>
         <div className="mt-3 flex flex-wrap items-baseline gap-x-2 border-t border-neutral-900/5 pt-3 dark:border-white/5">
           <span className="whitespace-nowrap text-xs text-neutral-500 dark:text-neutral-400">Resultado total</span>
-          <span className={`whitespace-nowrap text-sm font-semibold tabular-nums ${pnlTextClass(totals.totalPnlUsd)}`}>
+          <span className={`whitespace-nowrap text-sm font-semibold money tabular-nums ${pnlTextClass(totals.totalPnlUsd)}`}>
             {formatUsdSigned(totals.totalPnlUsd)}
           </span>
-          <span className={`whitespace-nowrap text-xs tabular-nums ${pnlTextClass(totals.dailyChangeUsd)}`}>
+          <span className={`whitespace-nowrap text-xs money tabular-nums ${pnlTextClass(totals.dailyChangeUsd)}`}>
             · {formatUsdSigned(totals.dailyChangeUsd)} hoy
           </span>
         </div>
@@ -80,7 +80,7 @@ function Tile({
       {/* nowrap: the leading minus of a negative amount is a break opportunity,
           so "-US$ 18,48" would otherwise split with the sign alone on a line. */}
       <div
-        className={`mt-0.5 whitespace-nowrap text-lg font-semibold tabular-nums ${valueClass ?? "text-neutral-900 dark:text-neutral-100"}`}
+        className={`money mt-0.5 whitespace-nowrap text-lg font-semibold tabular-nums ${valueClass ?? "text-neutral-900 dark:text-neutral-100"}`}
       >
         {value}
       </div>

@@ -75,36 +75,23 @@ describe("parseExpenseFilters", () => {
     expect(f.sources).toEqual(["visa_galicia"]);
   });
 
-  it("ignores amounts that aren't numbers", () => {
-    const f = parseExpenseFilters({ min: "abc", max: "" }, VALID);
-    expect(f.minArs).toBeNull();
-    expect(f.maxArs).toBeNull();
-  });
-
-  it("swaps min and max when they arrive inverted", () => {
-    const f = parseExpenseFilters({ min: "9000", max: "1000" }, VALID);
-    expect(f.minArs).toBe(1000);
-    expect(f.maxArs).toBe(9000);
-  });
-
-  it("ignores malformed dates and swaps an inverted range", () => {
-    expect(parseExpenseFilters({ desde: "10/06/2026" }, VALID).from).toBeNull();
-    const f = parseExpenseFilters({ desde: "2026-07-01", hasta: "2026-06-01" }, VALID);
-    expect(f.from).toBe("2026-06-01");
-    expect(f.to).toBe("2026-07-01");
-  });
-
   it("falls back to the default sort when the key is unknown", () => {
     const f = parseExpenseFilters({ orden: "xyz", dir: "sideways" }, VALID);
     expect(f.sort).toBe("fecha");
     expect(f.dir).toBe("desc");
   });
 
-  it("survives a query string of pure garbage", () => {
+  it("ignores params for filters that no longer exist", () => {
+    // Old links carried desde/hasta/min/max/cuotas; they must not break the page.
     const f = parseExpenseFilters(
-      { mes: "chorizo", orden: "xyz", min: "abc", desde: "ayer", cat: "Inventada", cuotas: "quizás" },
+      { desde: "2026-06-01", hasta: "2026-06-30", min: "500", max: "9000", cuotas: "1", q: "cafe" },
       VALID
     );
+    expect(f).toEqual(DEFAULT_FILTERS);
+  });
+
+  it("survives a query string of pure garbage", () => {
+    const f = parseExpenseFilters({ mes: "chorizo", orden: "xyz", cat: "Inventada" }, VALID);
     expect(f).toEqual(DEFAULT_FILTERS);
   });
 });
@@ -116,11 +103,12 @@ describe("filtersToSearchParams / buildHref", () => {
   });
 
   it("preserves the other filters when patching one", () => {
-    const f = filters({ month: "2026-06", categories: ["Gastronomía"] });
+    const f = filters({ month: "2026-06", categories: ["Gastronomía"], sources: ["amex_galicia"] });
     const href = buildHref("/gastos/movimientos", f, { month: "2026-07" });
     const qs = new URL(href, "http://x").searchParams;
     expect(qs.get("mes")).toBe("2026-07");
     expect(qs.getAll("cat")).toEqual(["Gastronomía"]);
+    expect(qs.getAll("tarjeta")).toEqual(["amex_galicia"]);
   });
 
   it("drops a filter from the URL when the patch clears it", () => {
@@ -134,11 +122,6 @@ describe("filtersToSearchParams / buildHref", () => {
       month: "2026-06",
       categories: ["Gastronomía"],
       sources: ["amex_galicia"],
-      from: "2026-06-01",
-      to: "2026-06-30",
-      minArs: 500,
-      maxArs: 9000,
-      installmentsOnly: true,
       sort: "monto",
       dir: "asc",
     });
@@ -164,15 +147,15 @@ describe("activeChips", () => {
     expect(chips[0].clear).toEqual({ categories: ["Transporte"] });
   });
 
-  it("counts every active dimension", () => {
-    const f = filters({ minArs: 100, maxArs: 5000, installmentsOnly: true });
+  it("counts categories and cards together", () => {
+    const f = filters({ categories: ["Otros"], sources: ["naranja", "visa_galicia"] });
     expect(activeFilterCount(f)).toBe(3);
   });
 });
 
 describe("clearedFilters", () => {
   it("keeps the month and sort but drops the narrowing filters", () => {
-    const f = filters({ month: "2026-06", sort: "monto", dir: "asc", categories: ["Otros"] });
+    const f = filters({ month: "2026-06", sort: "monto", dir: "asc", categories: ["Otros"], sources: ["naranja"] });
     expect(clearedFilters(f)).toEqual(filters({ month: "2026-06", sort: "monto", dir: "asc" }));
   });
 });
@@ -180,12 +163,12 @@ describe("clearedFilters", () => {
 describe("filterExpenses", () => {
   const data = [
     exp({ id: "a", merchant: "STARBUCKS", category: "Gastronomía", amount: 12000, txDate: "2026-06-05" }),
-    exp({ id: "b", merchant: "SUBTE", category: "Transporte", amount: 800, txDate: "2026-06-20" }),
+    exp({ id: "b", merchant: "SUBTE", category: "Transporte", amount: 800, txDate: "2026-06-20", source: "naranja" }),
     exp({ id: "c", merchant: "NETFLIX", category: "Otros", amount: 10, currency: "USD", txDate: "2026-06-15" }),
     exp({ id: "d", merchant: "PAGO TARJETA", category: "Pagos", amount: -50000, kind: "payment", txDate: "2026-06-28" }),
-    exp({ id: "e", merchant: "MUEBLES", category: "Otros", amount: 30000, txDate: "2026-05-11", installmentCurrent: 2, installmentTotal: 6 }),
+    exp({ id: "e", merchant: "MUEBLES", category: "Otros", amount: 30000, txDate: "2026-05-11" }),
   ];
-  const ids = (f: ExpenseFilters) => filterExpenses(data, f, CCL).map((e) => e.id);
+  const ids = (f: ExpenseFilters) => filterExpenses(data, f).map((e) => e.id);
 
   it("always excludes payments — paying the bill isn't spending", () => {
     expect(ids(DEFAULT_FILTERS)).not.toContain("d");
@@ -197,32 +180,19 @@ describe("filterExpenses", () => {
 
   it("filters by category and by card", () => {
     expect(ids(filters({ categories: ["Transporte"] }))).toEqual(["b"]);
-    expect(ids(filters({ sources: ["visa_galicia"] }))).toEqual(["a", "b", "c", "e"]);
+    expect(ids(filters({ sources: ["visa_galicia"] }))).toEqual(["a", "c", "e"]);
   });
 
-  it("compares amount bounds against the ARS-equivalent, so USD is included fairly", () => {
-    // NETFLIX is USD 10 = ARS 15.000 at CCL 1500 — above a 13.000 floor even
-    // though its raw amount is 10.
-    expect(ids(filters({ minArs: 13000 }))).toEqual(["c", "e"]);
-    expect(ids(filters({ maxArs: 1000 }))).toEqual(["b"]);
+  it("treats several values in one dimension as OR", () => {
+    expect(ids(filters({ categories: ["Gastronomía", "Transporte"] }))).toEqual(["a", "b"]);
   });
 
-  it("filters by transaction date range", () => {
-    expect(ids(filters({ from: "2026-06-10", to: "2026-06-25" }))).toEqual(["b", "c"]);
-  });
-
-  it("keeps only real installment plans when asked", () => {
-    expect(ids(filters({ installmentsOnly: true }))).toEqual(["e"]);
-  });
-
-
-
-  it("combines filters conjunctively", () => {
-    expect(ids(filters({ month: "2026-06", categories: ["Otros"], minArs: 1000 }))).toEqual(["c"]);
+  it("combines different dimensions conjunctively", () => {
+    expect(ids(filters({ month: "2026-06", categories: ["Otros"] }))).toEqual(["c"]);
   });
 
   it("returns nothing when the filters exclude everything", () => {
-    expect(ids(filters({ categories: ["Gastronomía"], minArs: 999999 }))).toEqual([]);
+    expect(ids(filters({ categories: ["Gastronomía"], sources: ["naranja"] }))).toEqual([]);
   });
 });
 
@@ -245,12 +215,18 @@ describe("sortExpenses", () => {
     expect(ids("monto", "asc")).toEqual(["b", "a", "c"]);
   });
 
-
+  it("compares amounts in ARS-equivalent, so USD sorts fairly", () => {
+    const mixed = [
+      exp({ id: "usd", amount: 10, currency: "USD" }), // 15.000 at CCL 1500
+      exp({ id: "ars", amount: 9000, currency: "ARS" }),
+    ];
+    expect(sortExpenses(mixed, "monto", "desc", CCL).map((e) => e.id)).toEqual(["usd", "ars"]);
+  });
 
   it("breaks ties deterministically, newest first", () => {
     const tied = [
-      exp({ id: "x2", category: "IGUAL", amount: 100, txDate: "2026-06-01" }),
-      exp({ id: "x1", category: "IGUAL", amount: 100, txDate: "2026-06-02" }),
+      exp({ id: "x2", amount: 100, txDate: "2026-06-01" }),
+      exp({ id: "x1", amount: 100, txDate: "2026-06-02" }),
     ];
     expect(sortExpenses(tied, "monto", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
     expect(sortExpenses([...tied].reverse(), "monto", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);

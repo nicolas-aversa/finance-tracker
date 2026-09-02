@@ -94,7 +94,7 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
                 <span className="block truncate font-medium text-neutral-900 dark:text-neutral-100">
                   {d.category}
                 </span>
-                <span className="block text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+                <span className="block text-xs money tabular-nums text-neutral-500 dark:text-neutral-400">
                   {formatArs(d.amountArs)}
                   <span className="text-neutral-400 dark:text-neutral-500">
                     {" · "}

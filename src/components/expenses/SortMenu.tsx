@@ -19,13 +19,14 @@ function currentLabel(f: ExpenseFilters): string {
  */
 export function SortMenu({ basePath, filters }: { basePath: string; filters: ExpenseFilters }) {
   return (
-    <details className="relative min-w-0 flex-1">
+    <details className="min-w-0 flex-1">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">
         <span className="truncate">{currentLabel(filters)}</span>
         <span aria-hidden className="text-neutral-400">▾</span>
       </summary>
 
-      <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
+      {/* Anchored to the control row, like the filter dropdowns. */}
+      <div className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
         {OPTIONS.map((o) => {
           const on = o.key === filters.sort && o.dir === filters.dir;
           return (

@@ -14,7 +14,7 @@ export function CardBreakdown({ cards }: { cards: CardSlice[] }) {
           <div key={c.source}>
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-neutral-900 dark:text-neutral-100">{SOURCE_LABEL[c.source]}</span>
-              <span className="tabular-nums text-neutral-700 dark:text-neutral-300">{formatArs(c.amountArs)}</span>
+              <span className="money tabular-nums text-neutral-700 dark:text-neutral-300">{formatArs(c.amountArs)}</span>
             </div>
             <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
               <div className="viz-mark h-full rounded-full" style={{ width: `${(c.amountArs / total) * 100}%`, "--viz-light": "#2a78d6", "--viz-dark": "#3987e5" } as React.CSSProperties} />

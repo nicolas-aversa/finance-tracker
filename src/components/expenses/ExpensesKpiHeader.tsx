@@ -27,7 +27,7 @@ export function ExpensesKpiHeader({
               "vs mes anterior" is a caption that may wrap — and the amount steps
               down a size on narrow phones so the pair always fits on one line. */}
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className="text-2xl font-semibold text-neutral-900 min-[360px]:text-3xl dark:text-neutral-100">
+            <span className="money text-2xl font-semibold text-neutral-900 min-[360px]:text-3xl dark:text-neutral-100">
               {formatArs(summary.combinedArs)}
             </span>
             {momDeltaPct !== null && (
@@ -44,7 +44,7 @@ export function ExpensesKpiHeader({
           </div>
         </div>
         {summary.totalUsd > 0 && (
-          <div className="mt-2 border-t border-neutral-900/5 pt-2 text-xs text-neutral-500 dark:border-white/5 dark:text-neutral-400">
+          <div className="money mt-2 border-t border-neutral-900/5 pt-2 text-xs text-neutral-500 dark:border-white/5 dark:text-neutral-400">
             Incluye {formatUsd(summary.totalUsd)} en consumos en dólares.
           </div>
         )}
@@ -53,7 +53,7 @@ export function ExpensesKpiHeader({
       <div className="grid grid-cols-2 gap-3">
         {isSummary ? (
           <>
-            <Tile label="Comprometido en cuotas" value={formatArs(futureCommitmentArs)} sub="cuotas por vencer" />
+            <Tile label="Comprometido en cuotas" value={formatArs(futureCommitmentArs)} sub="cuotas por vencer" money />
             <Tile label="Movimientos" value={String(summary.count)} sub="en todos los meses" />
           </>
         ) : (
@@ -67,11 +67,17 @@ export function ExpensesKpiHeader({
   );
 }
 
-function Tile({ label, value, sub }: { label: string; value: string; sub: string }) {
+/** `money` marks the values the privacy toggle should blur — a count or a
+ *  due date is not an amount. */
+function Tile({ label, value, sub, money }: { label: string; value: string; sub: string; money?: boolean }) {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <div className="text-xs text-neutral-500 dark:text-neutral-400">{label}</div>
-      <div className="mt-0.5 text-lg font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">{value}</div>
+      <div
+        className={`mt-0.5 text-lg font-semibold tabular-nums text-neutral-900 dark:text-neutral-100 ${money ? "money" : ""}`}
+      >
+        {value}
+      </div>
       <div className="mt-0.5 text-[11px] text-neutral-400 dark:text-neutral-500">{sub}</div>
     </div>
   );

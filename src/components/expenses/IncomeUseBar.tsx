@@ -35,7 +35,7 @@ export function IncomeUseBar({ use, monthLabel }: { use: IncomeUse; monthLabel: 
       </div>
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
-        <span className="whitespace-nowrap text-neutral-500 dark:text-neutral-400">
+        <span className="money whitespace-nowrap text-neutral-500 dark:text-neutral-400">
           {formatArs(use.spentArs)} de {formatArs(use.incomeArs)}
         </span>
         <span className={`whitespace-nowrap text-xs font-medium ${TEXT[use.status]}`}>
@@ -55,7 +55,7 @@ export function IncomeUseBar({ use, monthLabel }: { use: IncomeUse; monthLabel: 
         />
       </div>
 
-      <p className={`mt-1.5 text-[11px] ${TEXT[use.status]}`}>
+      <p className={`money mt-1.5 text-[11px] ${TEXT[use.status]}`}>
         {use.leftoverArs >= 0
           ? `Te quedaron ${formatArs(use.leftoverArs)}`
           : `Gastaste ${formatArs(-use.leftoverArs)} más de lo que entró`}

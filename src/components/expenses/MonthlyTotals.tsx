@@ -32,7 +32,7 @@ export function MonthlyTotals({ points }: { points: MonthPoint[] }) {
     <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Gasto por mes</h2>
-        <span className="whitespace-nowrap text-xs tabular-nums text-neutral-400 dark:text-neutral-500">
+        <span className="whitespace-nowrap text-xs money tabular-nums text-neutral-400 dark:text-neutral-500">
           promedio {formatArs(avg)}
         </span>
       </div>
@@ -68,7 +68,7 @@ export function MonthlyTotals({ points }: { points: MonthPoint[] }) {
                 />
                 {showLabel && (
                   <span
-                    className="absolute inset-x-0 whitespace-nowrap text-center text-[10px] font-medium tabular-nums text-neutral-600 dark:text-neutral-400"
+                    className="absolute inset-x-0 whitespace-nowrap text-center text-[10px] font-medium money tabular-nums text-neutral-600 dark:text-neutral-400"
                     style={{ bottom: `calc(${Math.max(pct, 2)}% + 4px)` }}
                   >
                     {formatArsShort(p.amountArs)}

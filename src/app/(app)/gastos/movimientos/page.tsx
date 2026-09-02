@@ -15,7 +15,6 @@ import { EXPENSE_SOURCES } from "@/lib/db/schema";
 import { SOURCE_LABEL } from "@/lib/expenses/labels";
 import { PeriodToggle } from "@/components/expenses/PeriodToggle";
 import { ExpenseRow } from "@/components/expenses/ExpenseRow";
-import { FilterBar } from "@/components/expenses/FilterBar";
 import { FilterDropdown } from "@/components/expenses/FilterDropdown";
 import { ActiveFilterChips } from "@/components/expenses/ActiveFilterChips";
 import { ResultsSummary } from "@/components/expenses/ResultsSummary";
@@ -54,7 +53,7 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
   const categoryNames = categories.map((c) => c.name);
   const filters = parseExpenseFilters(raw, { months, categories: categoryNames });
 
-  const visible = sortExpenses(filterExpenses(expenses, filters, ccl), filters.sort, filters.dir, ccl);
+  const visible = sortExpenses(filterExpenses(expenses, filters), filters.sort, filters.dir, ccl);
   const totals = filteredTotals(visible, ccl);
 
   // Switching month must keep the rest of the filters, so build each pill's href here.
@@ -85,9 +84,9 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
         />
       </div>
 
-      {/* Two rows: the three controls side by side truncate to "Cat…" on a
-          320px screen. */}
-      <div className="flex items-start gap-2">
+      {/* Two rows: three controls side by side truncate to "Cat…" at 320px.
+          The right-hand ones open leftwards so their menus stay on screen. */}
+      <div className="relative flex items-start gap-2">
         <FilterDropdown
           basePath={BASE}
           filters={filters}
@@ -106,10 +105,6 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
           selected={filters.sources}
           patchFor={(sources) => ({ sources: sources as typeof filters.sources })}
         />
-      </div>
-
-      <div className="flex items-start gap-2">
-        <FilterBar basePath={BASE} filters={filters} />
         <SortMenu basePath={BASE} filters={filters} />
       </div>
 

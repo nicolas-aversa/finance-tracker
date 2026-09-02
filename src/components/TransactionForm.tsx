@@ -232,9 +232,9 @@ export function TransactionForm({
 
       {preview && (
         <div className="rounded-xl bg-neutral-100 p-3 text-sm text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
-          <p>Monto en ARS: {formatArs(preview.arsAmount)}</p>
-          <p>Precio en USD: {formatUsd(preview.usdPrice)}</p>
-          <p>Monto en USD: {formatUsd(preview.usdAmount)}</p>
+          <p className="money">Monto en ARS: {formatArs(preview.arsAmount)}</p>
+          <p className="money">Precio en USD: {formatUsd(preview.usdPrice)}</p>
+          <p className="money">Monto en USD: {formatUsd(preview.usdAmount)}</p>
         </div>
       )}
 

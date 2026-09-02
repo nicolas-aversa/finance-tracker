@@ -45,7 +45,7 @@ export function AllocationChart({ rows }: { rows: TickerRow[] }) {
     <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex items-baseline justify-between">
         <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Distribución</h2>
-        <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{formatUsd(total)}</span>
+        <span className="money text-sm font-semibold text-neutral-900 dark:text-neutral-100">{formatUsd(total)}</span>
       </div>
 
       {/* gap-[2px] is the surface gap that separates segments — no borders drawn on the marks */}
@@ -77,7 +77,7 @@ export function AllocationChart({ rows }: { rows: TickerRow[] }) {
               }}
             />
             <span className="flex-1 font-medium text-neutral-900 dark:text-neutral-100">{s.label}</span>
-            <span className="tabular-nums text-neutral-500 dark:text-neutral-400">{formatUsd(s.valueUsd)}</span>
+            <span className="money tabular-nums text-neutral-500 dark:text-neutral-400">{formatUsd(s.valueUsd)}</span>
             <span className="w-11 text-right tabular-nums text-neutral-400 dark:text-neutral-500">
               {pct(s.valueUsd).toFixed(0)}%
             </span>

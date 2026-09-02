@@ -46,7 +46,7 @@ export function PositionPnlChart({ rows }: { rows: TickerRow[] }) {
                 />
               </div>
 
-              <span className={`w-28 shrink-0 text-right text-xs tabular-nums ${pnlTextClass(r.unrealizedPnlUsd)}`}>
+              <span className={`w-28 shrink-0 text-right text-xs money tabular-nums ${pnlTextClass(r.unrealizedPnlUsd)}`}>
                 {formatUsdSigned(r.unrealizedPnlUsd)}
                 <span className="text-neutral-400 dark:text-neutral-500"> ({formatPercentSigned(r.unrealizedRoi)})</span>
               </span>

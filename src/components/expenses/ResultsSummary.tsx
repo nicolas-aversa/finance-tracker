@@ -8,7 +8,7 @@ export function ResultsSummary({ totals }: { totals: FilteredTotals }) {
       <span>
         {totals.count} {totals.count === 1 ? "movimiento" : "movimientos"}
       </span>
-      <span className="tabular-nums font-medium text-neutral-700 dark:text-neutral-300">
+      <span className="money tabular-nums font-medium text-neutral-700 dark:text-neutral-300">
         {formatArs(totals.combinedArs)}
         {totals.totalUsd !== 0 && (
           <span className="ml-1 font-normal text-neutral-400 dark:text-neutral-500">

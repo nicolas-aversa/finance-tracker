@@ -33,16 +33,16 @@ export function TradeLogRow({ tx, metrics }: { tx: DomainTransaction; metrics: P
           </span>
         </div>
         <div className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-          {formatDate(tx.tradeDate)} · {formatQty(tx.qty)} u. · {formatUsd(usdPrice)}/u
+          {formatDate(tx.tradeDate)} · <span className="money">{formatQty(tx.qty)} u. · {formatUsd(usdPrice)}/u</span>
         </div>
       </div>
 
       <div className="text-right">
-        <div className="text-sm font-medium tabular-nums text-neutral-900 dark:text-neutral-100">
+        <div className="text-sm font-medium money tabular-nums text-neutral-900 dark:text-neutral-100">
           {formatUsd(usdAmount)}
         </div>
         {metrics && (
-          <div className={`text-xs tabular-nums ${profitClass(metrics.profit)}`}>
+          <div className={`text-xs money tabular-nums ${profitClass(metrics.profit)}`}>
             {formatUsd(metrics.profit)} ({formatPercent(metrics.roi)})
           </div>
         )}

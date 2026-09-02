@@ -18,11 +18,15 @@ import { EmptyState } from "@/components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
-function Tile({ label, value, hint }: { label: string; value: string; hint?: React.ReactNode }) {
+function Tile({ label, value, hint, money }: { label: string; value: string; hint?: React.ReactNode; money?: boolean }) {
   return (
     <div className="rounded-2xl border border-neutral-100 p-3 dark:border-neutral-800">
       <p className="text-[11px] text-neutral-400 dark:text-neutral-500">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">{value}</p>
+      <p
+        className={`mt-0.5 text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100 ${money ? "money" : ""}`}
+      >
+        {value}
+      </p>
       {hint && <p className="mt-0.5 text-[11px]">{hint}</p>}
     </div>
   );
@@ -96,7 +100,7 @@ export default async function CategoriaPage({
           {month ? "Gasto del mes" : "Gasto acumulado"}
         </p>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <span className="text-2xl font-semibold tabular-nums text-neutral-900 min-[360px]:text-3xl dark:text-neutral-100">
+          <span className="text-2xl font-semibold money tabular-nums text-neutral-900 min-[360px]:text-3xl dark:text-neutral-100">
             {formatArs(detail.totalArs)}
           </span>
           {/* Only meaningful next to a single month's total — a month-over-month
@@ -117,7 +121,7 @@ export default async function CategoriaPage({
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Tile label="Del total" value={formatPercent(detail.sharePct)} />
           <Tile label="Movimientos" value={String(detail.count)} />
-          <Tile label="Promedio mensual" value={formatArs(avgArs)} />
+          <Tile label="Promedio mensual" value={formatArs(avgArs)} money />
         </div>
       </div>
 
@@ -142,7 +146,7 @@ export default async function CategoriaPage({
                 <div key={m.merchant}>
                   <div className="flex items-center justify-between gap-2 text-sm">
                     <span className="truncate font-medium text-neutral-900 dark:text-neutral-100">{m.merchant}</span>
-                    <span className="shrink-0 tabular-nums text-neutral-700 dark:text-neutral-300">
+                    <span className="shrink-0 money tabular-nums text-neutral-700 dark:text-neutral-300">
                       {formatArs(m.amountArs)}
                     </span>
                   </div>

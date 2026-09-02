@@ -38,7 +38,7 @@ export function HoldingsTable({ rows }: { rows: TickerRow[] }) {
                     {formatPercent(row.weightPct)}
                   </span>
                 </div>
-                <span className="text-base font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
+                <span className="text-base font-semibold money tabular-nums text-neutral-900 dark:text-neutral-100">
                   {formatUsd(row.marketValueUsd)}
                 </span>
               </div>
@@ -58,16 +58,16 @@ export function HoldingsTable({ rows }: { rows: TickerRow[] }) {
 
               {/* Detail grid: cantidad / PPC / precio actual */}
               <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <Metric label="Cantidad" value={`${formatQty(row.qty)} u`} />
-                <Metric label="Precio prom." value={formatUsd(row.avgCostUsd)} />
-                <Metric label="Precio actual" value={formatUsd(row.currentPriceUsd)} />
+                <Metric label="Cantidad" value={`${formatQty(row.qty)} u`} money />
+                <Metric label="Precio prom." value={formatUsd(row.avgCostUsd)} money />
+                <Metric label="Precio actual" value={formatUsd(row.currentPriceUsd)} money />
               </div>
 
               {/* Result + today */}
               <div className="mt-3 flex items-center justify-between gap-3 border-t border-neutral-100 pt-2 text-xs dark:border-neutral-800">
                 <div>
                   <span className="text-neutral-400 dark:text-neutral-500">Resultado </span>
-                  <span className={`font-semibold tabular-nums ${pnlTextClass(row.unrealizedPnlUsd)}`}>
+                  <span className={`font-semibold money tabular-nums ${pnlTextClass(row.unrealizedPnlUsd)}`}>
                     {formatUsdSigned(row.unrealizedPnlUsd)} ({formatPercentSigned(row.unrealizedRoi)})
                   </span>
                 </div>
@@ -88,11 +88,15 @@ export function HoldingsTable({ rows }: { rows: TickerRow[] }) {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, money }: { label: string; value: string; money?: boolean }) {
   return (
     <div>
       <div className="text-[10px] text-neutral-400 dark:text-neutral-500">{label}</div>
-      <div className="text-sm font-medium tabular-nums text-neutral-900 dark:text-neutral-100">{value}</div>
+      <div
+        className={`text-sm font-medium tabular-nums text-neutral-900 dark:text-neutral-100 ${money ? "money" : ""}`}
+      >
+        {value}
+      </div>
     </div>
   );
 }

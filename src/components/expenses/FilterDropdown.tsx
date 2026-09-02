@@ -38,7 +38,7 @@ export function FilterDropdown({
   const active = selected.length > 0;
 
   return (
-    <details className="relative min-w-0 flex-1">
+    <details className="min-w-0 flex-1">
       <summary
         className={`flex cursor-pointer list-none items-center justify-between gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
           active
@@ -50,7 +50,10 @@ export function FilterDropdown({
         <span aria-hidden className={active ? "text-accent" : "text-neutral-400"}>▾</span>
       </summary>
 
-      <div className="absolute left-0 z-20 mt-1 max-h-72 w-56 overflow-y-auto overscroll-contain rounded-2xl border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
+      {/* Anchored to the control row (which is `relative`), not to this column:
+          a fixed-width menu hanging off a middle or right column runs off one
+          side or the other on a narrow screen. Spanning the row always fits. */}
+      <div className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-y-auto overscroll-contain rounded-2xl border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
         <Link
           href={buildHref(basePath, filters, patchFor([]))}
           scroll={false}
