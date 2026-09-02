@@ -29,7 +29,7 @@ export function FilterBar({ basePath, filters }: { basePath: string; filters: Ex
   const count = panelCount(filters);
 
   return (
-    <form method="GET" action={basePath} className="flex flex-col gap-2">
+    <form method="GET" action={basePath} className="min-w-0 flex-1">
       {/* Everything this panel doesn't render still has to survive the submit. */}
       {filters.month && <input type="hidden" name="mes" value={filters.month} />}
       {filters.categories.map((c) => (
@@ -41,20 +41,25 @@ export function FilterBar({ basePath, filters }: { basePath: string; filters: Ex
       {filters.sort !== DEFAULT_FILTERS.sort && <input type="hidden" name="orden" value={filters.sort} />}
       {filters.dir !== DEFAULT_FILTERS.dir && <input type="hidden" name="dir" value={filters.dir} />}
 
-      <details open={count > 0} className="rounded-2xl border border-neutral-200 dark:border-neutral-800">
-        <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-          <span>
+      {/* Same pill as the Categoría / Tarjeta dropdowns, so the four controls
+          read as one set. The panel is absolutely positioned and spans both
+          columns of its row — the form is far too wide for half a row. */}
+      <details open={count > 0} className="relative">
+        <summary
+          className={`flex cursor-pointer list-none items-center justify-between gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+            count > 0
+              ? "border-accent bg-accent-soft text-accent"
+              : "border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
+          }`}
+        >
+          <span className="truncate">
             Fechas y montos
-            {count > 0 && (
-              <span className="ml-2 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-accent-foreground">
-                {count}
-              </span>
-            )}
+            {count > 0 && <span className="ml-1 font-semibold">({count})</span>}
           </span>
-          <span aria-hidden className="text-neutral-400">▾</span>
+          <span aria-hidden className={count > 0 ? "text-accent" : "text-neutral-400"}>▾</span>
         </summary>
 
-        <div className="flex flex-col gap-4 border-t border-neutral-200 px-4 py-4 dark:border-neutral-800">
+        <div className="absolute left-0 z-20 mt-1 flex w-[calc(200%+0.5rem)] flex-col gap-4 rounded-2xl border border-neutral-200 bg-white px-4 py-4 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
           {/* Date inputs have a wide intrinsic width (the value plus the picker
               icon): side by side under ~360px they clip the year, so they stack. */}
           <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">

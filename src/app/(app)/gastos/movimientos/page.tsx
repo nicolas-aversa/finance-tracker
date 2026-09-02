@@ -109,9 +109,7 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
       </div>
 
       <div className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <FilterBar basePath={BASE} filters={filters} />
-        </div>
+        <FilterBar basePath={BASE} filters={filters} />
         <SortMenu basePath={BASE} filters={filters} />
       </div>
 

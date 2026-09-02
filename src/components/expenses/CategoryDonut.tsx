@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { tailColor, tickerColor } from "@/lib/domain/chart-colors";
+import { tickerColor } from "@/lib/domain/chart-colors";
 import { formatArs } from "@/lib/format";
 import type { CategorySlice } from "@/lib/expenses/aggregate";
 
@@ -7,10 +7,6 @@ const CENTER = 100;
 const OUTER_R = 80;
 const INNER_R = 50;
 const GAP = 2 / OUTER_R;
-// The validated categorical palette has 6 hues. Every category still gets its
-// own wedge; past the sixth they take neutral steps instead of invented hues,
-// which would be indistinguishable under colour-vision deficiency.
-const COLORED_SLICES = 6;
 
 function polar(r: number, a: number) {
   return { x: CENTER + r * Math.sin(a), y: CENTER - r * Math.cos(a) };
@@ -39,8 +35,7 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
       const angle = (d.amountArs / total) * 2 * Math.PI;
       const pad = Math.min(GAP / 2, (angle / 2) * 0.9);
       const path = arc(start + pad, Math.max(start + angle - pad, start + pad));
-      const color = i < COLORED_SLICES ? tickerColor(i) : tailColor(i - COLORED_SLICES);
-      out.push({ d, path, color, end: start + angle });
+      out.push({ d, path, color: tickerColor(i), end: start + angle });
       return out;
     },
     []

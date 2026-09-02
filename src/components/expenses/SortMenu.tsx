@@ -19,9 +19,9 @@ function currentLabel(f: ExpenseFilters): string {
  */
 export function SortMenu({ basePath, filters }: { basePath: string; filters: ExpenseFilters }) {
   return (
-    <details className="relative shrink-0">
-      <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">
-        <span>{currentLabel(filters)}</span>
+    <details className="relative min-w-0 flex-1">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">
+        <span className="truncate">{currentLabel(filters)}</span>
         <span aria-hidden className="text-neutral-400">▾</span>
       </summary>
 
