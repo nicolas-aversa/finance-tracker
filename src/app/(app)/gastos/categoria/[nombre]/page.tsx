@@ -105,7 +105,9 @@ export default async function CategoriaPage({
             {formatPercentSigned(detail.momDeltaPct)} vs mes anterior
           </span>
         )}
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        {/* Two columns: at 375px a third one wraps "Promedio mensual" onto two
+            lines and leaves its amount touching the tile edge. */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
           <Tile label="Del total" value={formatPercent(detail.sharePct)} />
           <Tile label="Movimientos" value={String(detail.count)} />
           <Tile label="Promedio mensual" value={formatArs(avgArs)} />

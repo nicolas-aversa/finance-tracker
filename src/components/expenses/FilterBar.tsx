@@ -11,6 +11,9 @@ import {
 
 const FIELD =
   "w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-accent focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100";
+// Tighter horizontal padding than FIELD: a date input also has to fit the
+// browser's picker icon, and px-3 pushed the year out of view on small phones.
+const DATE_FIELD = FIELD.replace("px-3", "px-2");
 const LABEL = "text-xs font-medium text-neutral-500 dark:text-neutral-400";
 
 function Check({
@@ -105,15 +108,20 @@ export function FilterBar({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          {/* Date inputs have a wide intrinsic width (the value plus the picker
+              icon): side by side under ~360px they clip the year, so they stack. */}
+          <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
             <label className="flex flex-col gap-1">
               <span className={LABEL}>Desde</span>
-              <input type="date" name="desde" defaultValue={filters.from ?? ""} className={FIELD} />
+              <input type="date" name="desde" defaultValue={filters.from ?? ""} className={DATE_FIELD} />
             </label>
             <label className="flex flex-col gap-1">
               <span className={LABEL}>Hasta</span>
-              <input type="date" name="hasta" defaultValue={filters.to ?? ""} className={FIELD} />
+              <input type="date" name="hasta" defaultValue={filters.to ?? ""} className={DATE_FIELD} />
             </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
             <label className="flex flex-col gap-1">
               <span className={LABEL}>Monto mínimo</span>
               <input

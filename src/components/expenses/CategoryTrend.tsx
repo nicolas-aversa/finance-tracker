@@ -4,6 +4,8 @@ import type { MonthPoint } from "@/lib/expenses/aggregate";
 
 const MAX_MONTHS = 12;
 const LABEL_EVERY_UP_TO = 7;
+// Leaves room above the tallest bar for its value label — see MonthlyTotals.
+const PLOT_SCALE = 0.85;
 
 /**
  * One category's spend per billing month. Single series, single color — the
@@ -23,9 +25,9 @@ export function CategoryTrend({
   if (points.length < 2) return null;
 
   const max = Math.max(...points.map((p) => p.amountArs));
+  const heightPct = (v: number) => (max > 0 ? (v / max) * 100 * PLOT_SCALE : 0);
   const withSpend = points.filter((p) => p.amountArs > 0);
   const avg = withSpend.length > 0 ? withSpend.reduce((s, p) => s + p.amountArs, 0) / withSpend.length : 0;
-  const avgPct = max > 0 ? (avg / max) * 100 : 0;
   const labelAll = points.length <= LABEL_EVERY_UP_TO;
 
   return (
@@ -37,33 +39,29 @@ export function CategoryTrend({
         </span>
       </div>
 
-      <div className="relative mt-7 h-28">
+      <div className="relative mt-4 h-28">
         {avg > 0 && (
           <div
             className="pointer-events-none absolute inset-x-0 border-t border-neutral-200 dark:border-neutral-700"
-            style={{ bottom: `${avgPct}%` }}
+            style={{ bottom: `${heightPct(avg)}%` }}
             aria-hidden
           />
         )}
 
-        <div className="flex h-full items-end gap-1.5">
+        {/* `relative` keeps the bars above the average hairline. */}
+        <div className="relative flex h-full items-end gap-1.5">
           {points.map((p) => {
-            const pct = max > 0 ? (p.amountArs / max) * 100 : 0;
+            const pct = heightPct(p.amountArs);
             const isActive = activeMonth === null || p.month === activeMonth;
             const showLabel = p.amountArs > 0 && (labelAll || p.month === activeMonth || p.amountArs === max);
             return (
               <div
                 key={p.month}
-                className="flex h-full flex-1 flex-col justify-end"
+                className="relative h-full flex-1"
                 title={`${monthDisplay(p.month)}: ${formatArs(p.amountArs)}`}
               >
-                {showLabel && (
-                  <span className="mb-1 whitespace-nowrap text-center text-[10px] font-medium tabular-nums text-neutral-600 dark:text-neutral-400">
-                    {formatArsShort(p.amountArs)}
-                  </span>
-                )}
                 <div
-                  className="viz-mark mx-auto w-full max-w-5 rounded-t"
+                  className="viz-mark absolute inset-x-0 bottom-0 mx-auto w-full max-w-5 rounded-t"
                   style={{
                     height: `${Math.max(pct, p.amountArs > 0 ? 2 : 0)}%`,
                     opacity: isActive ? 1 : 0.55,
@@ -72,6 +70,14 @@ export function CategoryTrend({
                     "--viz-dark": color.dark,
                   }}
                 />
+                {showLabel && (
+                  <span
+                    className="absolute inset-x-0 whitespace-nowrap text-center text-[10px] font-medium tabular-nums text-neutral-600 dark:text-neutral-400"
+                    style={{ bottom: `calc(${Math.max(pct, 2)}% + 4px)` }}
+                  >
+                    {formatArsShort(p.amountArs)}
+                  </span>
+                )}
               </div>
             );
           })}

@@ -70,7 +70,7 @@ export function BenchmarkChart({ points }: { points: BenchmarkPoint[] }) {
         </span>
       </div>
 
-      <div className="mt-1 flex gap-4">
+      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
         <LegendValue
           label="Tu cartera"
           color={PORTFOLIO_COLOR}
@@ -218,8 +218,8 @@ function LegendValue({
           "--viz-dark": color.dark,
         }}
       />
-      <span className="text-xs text-neutral-500 dark:text-neutral-400">{label}</span>
-      <span className={`text-xs font-semibold tabular-nums ${valueClass}`}>{value}</span>
+      <span className="whitespace-nowrap text-xs text-neutral-500 dark:text-neutral-400">{label}</span>
+      <span className={`whitespace-nowrap text-xs font-semibold tabular-nums ${valueClass}`}>{value}</span>
     </div>
   );
 }

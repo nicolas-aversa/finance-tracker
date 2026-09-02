@@ -7,6 +7,10 @@ const MAX_MONTHS = 12;
 // Past this many columns the value labels stop fitting side by side on a phone,
 // so only the extremes get one and the rest fall back to the tooltip.
 const LABEL_EVERY_UP_TO = 7;
+// Bars top out at 85% of the plot so the value label always has room above the
+// tallest one. Without this the label stacks on top of a full-height bar and
+// pushes the whole column out of the container.
+const PLOT_SCALE = 0.85;
 const BAR = TICKER_CATEGORICAL_COLORS[0]; // one series -> slot 1, no legend needed
 
 /**
@@ -19,8 +23,8 @@ export function MonthlyTotals({ points }: { points: MonthPoint[] }) {
   if (recent.length < 2) return null;
 
   const max = Math.max(...recent.map((p) => p.amountArs));
+  const heightPct = (v: number) => (max > 0 ? (v / max) * 100 * PLOT_SCALE : 0);
   const avg = recent.reduce((s, p) => s + p.amountArs, 0) / recent.length;
-  const avgPct = max > 0 ? (avg / max) * 100 : 0;
   const latest = recent[recent.length - 1].month;
   const labelAll = recent.length <= LABEL_EVERY_UP_TO;
 
@@ -33,31 +37,28 @@ export function MonthlyTotals({ points }: { points: MonthPoint[] }) {
         </span>
       </div>
 
-      <div className="relative mt-7 h-32">
+      <div className="relative mt-4 h-32">
         {/* Average reference: a solid hairline, one step off the surface. */}
         <div
           className="pointer-events-none absolute inset-x-0 border-t border-neutral-200 dark:border-neutral-700"
-          style={{ bottom: `${avgPct}%` }}
+          style={{ bottom: `${heightPct(avg)}%` }}
           aria-hidden
         />
 
-        <div className="flex h-full items-end gap-2">
+        {/* `relative` puts the bars above the absolutely-positioned average line,
+            which would otherwise paint over them. */}
+        <div className="relative flex h-full items-end gap-2">
           {recent.map((p) => {
-            const pct = max > 0 ? (p.amountArs / max) * 100 : 0;
+            const pct = heightPct(p.amountArs);
             const showLabel = labelAll || p.month === latest || p.amountArs === max;
             return (
               <div
                 key={p.month}
-                className="flex h-full flex-1 flex-col justify-end"
+                className="relative h-full flex-1"
                 title={`${monthDisplay(p.month)}: ${formatArs(p.amountArs)}`}
               >
-                {showLabel && (
-                  <span className="mb-1 whitespace-nowrap text-center text-[10px] font-medium tabular-nums text-neutral-600 dark:text-neutral-400">
-                    {formatArsShort(p.amountArs)}
-                  </span>
-                )}
                 <div
-                  className="viz-mark mx-auto w-full max-w-6 rounded-t"
+                  className="viz-mark absolute inset-x-0 bottom-0 mx-auto w-full max-w-6 rounded-t"
                   style={{
                     height: `${Math.max(pct, p.amountArs > 0 ? 2 : 0)}%`,
                     // @ts-expect-error custom props
@@ -65,6 +66,14 @@ export function MonthlyTotals({ points }: { points: MonthPoint[] }) {
                     "--viz-dark": BAR.dark,
                   }}
                 />
+                {showLabel && (
+                  <span
+                    className="absolute inset-x-0 whitespace-nowrap text-center text-[10px] font-medium tabular-nums text-neutral-600 dark:text-neutral-400"
+                    style={{ bottom: `calc(${Math.max(pct, 2)}% + 4px)` }}
+                  >
+                    {formatArsShort(p.amountArs)}
+                  </span>
+                )}
               </div>
             );
           })}

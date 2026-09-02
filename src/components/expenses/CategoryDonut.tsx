@@ -31,8 +31,10 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
 
   const top = positive.slice(0, MAX_SLICES);
   const rest = positive.slice(MAX_SLICES);
+  // "Resto", not "Otros": there is a real category called Otros, and two rows
+  // reading "Otros" in the same legend is unreadable.
   const display = rest.length
-    ? [...top, { category: `Otros (${rest.length})`, amountArs: rest.reduce((s, r) => s + r.amountArs, 0) }]
+    ? [...top, { category: `Resto (${rest.length})`, amountArs: rest.reduce((s, r) => s + r.amountArs, 0) }]
     : top;
   const total = display.reduce((s, d) => s + d.amountArs, 0);
 
