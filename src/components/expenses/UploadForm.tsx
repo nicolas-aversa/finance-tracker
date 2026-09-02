@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { uploadStatement, type UploadState } from "@/app/(app)/gastos/subir/actions";
-import { SOURCE_EMOJI, SOURCE_LABEL } from "@/lib/expenses/labels";
+import { SOURCE_LABEL } from "@/lib/expenses/labels";
 import { formatDate } from "@/lib/format";
 import type { ExpenseSource } from "@/lib/db/schema";
 
@@ -63,7 +63,6 @@ function ImportSummary({ result }: { result: NonNullable<UploadState>["ok"] }) {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex items-center gap-2">
-        <span className="text-xl">{SOURCE_EMOJI[source]}</span>
         <span className="font-semibold text-neutral-900 dark:text-neutral-100">{SOURCE_LABEL[source]}</span>
         {result.replaced && (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-400">

@@ -7,11 +7,3 @@ export const SOURCE_LABEL: Record<ExpenseSource, string> = {
   naranja: "Naranja",
   manual: "Manual",
 };
-
-export const SOURCE_EMOJI: Record<ExpenseSource, string> = {
-  mercadopago: "💙",
-  visa_galicia: "💳",
-  amex_galicia: "🟩",
-  naranja: "🟠",
-  manual: "✍️",
-};

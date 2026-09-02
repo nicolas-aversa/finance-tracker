@@ -4,7 +4,6 @@ import { buildHref, type ExpenseFilters, type SortKey } from "@/lib/expenses/fil
 const OPTIONS: { key: SortKey; label: string }[] = [
   { key: "fecha", label: "Fecha" },
   { key: "monto", label: "Monto" },
-  { key: "comercio", label: "Comercio" },
   { key: "categoria", label: "Categoría" },
 ];
 

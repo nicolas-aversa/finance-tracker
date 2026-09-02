@@ -255,8 +255,14 @@ describe("sortExpenses", () => {
     expect(ids("monto", "asc")).toEqual(["b", "a", "c"]);
   });
 
-  it("sorts merchants accent-insensitively, so 'árbol' comes before 'Bar'", () => {
-    expect(ids("comercio", "asc")).toEqual(["b", "c", "a"]);
+  it("sorts categories accent-insensitively", () => {
+    // "Ñandú" must fall between "Indumentaria" and "Otros", not after Z.
+    const accented = [
+      exp({ id: "n", category: "Ñandú" }),
+      exp({ id: "i", category: "Indumentaria" }),
+      exp({ id: "o", category: "Otros" }),
+    ];
+    expect(sortExpenses(accented, "categoria", "asc", CCL).map((e) => e.id)).toEqual(["i", "n", "o"]);
   });
 
   it("sorts by category", () => {
@@ -265,11 +271,11 @@ describe("sortExpenses", () => {
 
   it("breaks ties deterministically, newest first", () => {
     const tied = [
-      exp({ id: "x2", merchant: "IGUAL", amount: 100, txDate: "2026-06-01" }),
-      exp({ id: "x1", merchant: "IGUAL", amount: 100, txDate: "2026-06-02" }),
+      exp({ id: "x2", category: "IGUAL", amount: 100, txDate: "2026-06-01" }),
+      exp({ id: "x1", category: "IGUAL", amount: 100, txDate: "2026-06-02" }),
     ];
-    expect(sortExpenses(tied, "comercio", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
-    expect(sortExpenses([...tied].reverse(), "comercio", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
+    expect(sortExpenses(tied, "categoria", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
+    expect(sortExpenses([...tied].reverse(), "categoria", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
   });
 
   it("does not mutate the input array", () => {

@@ -4,8 +4,9 @@ import Link from "next/link";
 import { monthShort } from "@/lib/expenses/months";
 
 /**
- * Segmented control: [Resumen] [Mayo] [Junio] … — Resumen (accumulated) first,
- * then billing months oldest→newest. Navigates via ?mes= (resumen = accumulated).
+ * Segmented control: [Resumen] [Ago] [Jul] [Jun] … — Resumen (accumulated)
+ * first, then billing months newest→oldest, so the month you look at most is
+ * the one closest at hand. Navigates via ?mes= (resumen = accumulated).
  */
 export function PeriodToggle({
   months,
@@ -13,7 +14,7 @@ export function PeriodToggle({
   basePath = "/gastos",
   hrefs,
 }: {
-  months: string[]; // any order; displayed ascending
+  months: string[]; // any order; displayed newest first
   active: string; // a "yyyy-mm" or "resumen"
   basePath?: string;
   /**
@@ -24,7 +25,7 @@ export function PeriodToggle({
    */
   hrefs?: Record<string, string>;
 }) {
-  const ordered = [...new Set(months)].sort();
+  const ordered = [...new Set(months)].sort().reverse();
   const pills: { value: string; label: string }[] = [
     { value: "resumen", label: "Resumen" },
     ...ordered.map((m) => ({ value: m, label: monthShort(m) })),

@@ -3,10 +3,10 @@ import { isSpend, spendArs } from "./aggregate";
 import { normalizeText } from "./text";
 import type { DomainExpense } from "./types";
 
-export type SortKey = "fecha" | "monto" | "comercio" | "categoria";
+export type SortKey = "fecha" | "monto" | "categoria";
 export type SortDir = "asc" | "desc";
 
-const SORT_KEYS: SortKey[] = ["fecha", "monto", "comercio", "categoria"];
+const SORT_KEYS: SortKey[] = ["fecha", "monto", "categoria"];
 const SORT_DIRS: SortDir[] = ["asc", "desc"];
 
 /** Every filter the movements list understands. All of it lives in the URL. */
@@ -233,9 +233,6 @@ export function sortExpenses(
         break;
       case "monto":
         cmp = spendArs(a, cclRate) - spendArs(b, cclRate);
-        break;
-      case "comercio":
-        cmp = collator.compare(a.merchant, b.merchant);
         break;
       case "categoria":
         cmp = collator.compare(a.category, b.category);

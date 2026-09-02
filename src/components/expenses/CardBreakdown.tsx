@@ -1,5 +1,5 @@
 import { formatArs } from "@/lib/format";
-import { SOURCE_EMOJI, SOURCE_LABEL } from "@/lib/expenses/labels";
+import { SOURCE_LABEL } from "@/lib/expenses/labels";
 import type { CardSlice } from "@/lib/expenses/aggregate";
 
 export function CardBreakdown({ cards }: { cards: CardSlice[] }) {
@@ -13,10 +13,7 @@ export function CardBreakdown({ cards }: { cards: CardSlice[] }) {
         {cards.map((c) => (
           <div key={c.source}>
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 font-medium text-neutral-900 dark:text-neutral-100">
-                <span>{SOURCE_EMOJI[c.source]}</span>
-                {SOURCE_LABEL[c.source]}
-              </span>
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">{SOURCE_LABEL[c.source]}</span>
               <span className="tabular-nums text-neutral-700 dark:text-neutral-300">{formatArs(c.amountArs)}</span>
             </div>
             <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
