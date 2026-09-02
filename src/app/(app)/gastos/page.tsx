@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { listExpenses, listImports } from "@/lib/db/expenses";
 import { listBudgets } from "@/lib/db/budgets";
+import { listIncome } from "@/lib/db/income";
+import { incomeUse } from "@/lib/expenses/income";
 import { budgetProgress, monthProgressFor } from "@/lib/expenses/budgets";
 import { monthDisplay } from "@/lib/expenses/months";
 import { safeCcl } from "@/lib/prices/safe-ccl";
@@ -14,15 +16,17 @@ import { CardBreakdown } from "@/components/expenses/CardBreakdown";
 import { InstallmentsList } from "@/components/expenses/InstallmentsList";
 import { PeriodToggle } from "@/components/expenses/PeriodToggle";
 import { BudgetList } from "@/components/expenses/BudgetList";
+import { IncomeUseBar } from "@/components/expenses/IncomeUseBar";
 import { EmptyState } from "@/components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
 export default async function GastosPage({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
-  const [rows, imports, budgets, ccl, { mes }] = await Promise.all([
+  const [rows, imports, budgets, income, ccl, { mes }] = await Promise.all([
     listExpenses(),
     listImports(),
     listBudgets(),
+    listIncome(),
     safeCcl(),
     searchParams,
   ]);
@@ -69,6 +73,9 @@ export default async function GastosPage({ searchParams }: { searchParams: Promi
     ? budgetProgress(budgets, budgetSummary.byCategory, monthProgressFor(budgetMonth, today))
     : [];
 
+  // Income is a monthly figure, so it follows the same month as the budgets.
+  const use = budgetMonth ? incomeUse(income, budgetMonth, budgetSummary.combinedArs) : null;
+
   const periodDue = imports
     .filter((i) => i.dueDate && month !== null && billingMonth(i.statementPeriod) === month)
     .map((i) => i.dueDate as string)
@@ -90,6 +97,8 @@ export default async function GastosPage({ searchParams }: { searchParams: Promi
         totalLabel={isSummary ? "Gasto acumulado" : "Gasto del mes"}
         variant={isSummary ? "summary" : "month"}
       />
+
+      {use && <IncomeUseBar use={use} monthLabel={monthDisplay(use.month)} />}
 
       {budgetMonth && (
         <BudgetList

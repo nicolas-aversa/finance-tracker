@@ -148,6 +148,18 @@ export const expenseBudgets = pgTable("expense_budgets", {
 export type ExpenseBudget = typeof expenseBudgets.$inferSelect;
 export type NewExpenseBudget = typeof expenseBudgets.$inferInsert;
 
+/**
+ * What came in each month ("yyyy-mm"), to measure spend against. Per month
+ * rather than a single recurring figure, because income actually moves.
+ */
+export const monthlyIncome = pgTable("monthly_income", {
+  month: text("month").primaryKey(),
+  amountArs: numeric("amount_ars", { precision: 16, scale: 2 }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type MonthlyIncome = typeof monthlyIncome.$inferSelect;
+
 /** Keyword → category rules for auto-categorization at import time. */
 export const categoryRules = pgTable(
   "category_rules",

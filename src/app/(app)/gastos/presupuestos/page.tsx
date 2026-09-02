@@ -1,19 +1,22 @@
 import { listBudgets } from "@/lib/db/budgets";
+import { listIncome } from "@/lib/db/income";
 import { getCategories, listExpenses } from "@/lib/db/expenses";
 import { safeCcl } from "@/lib/prices/safe-ccl";
 import { toDomainExpense } from "@/lib/expenses/types";
-import { categoryDetail, listMonths } from "@/lib/expenses/aggregate";
+import { categoryDetail, listMonths, monthlyTotals } from "@/lib/expenses/aggregate";
 import { formatArs } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
 import { BudgetForm } from "@/components/expenses/BudgetForm";
+import { IncomeForm } from "@/components/expenses/IncomeForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function PresupuestosPage() {
-  const [rows, categories, budgets, ccl] = await Promise.all([
+  const [rows, categories, budgets, income, ccl] = await Promise.all([
     listExpenses(),
     getCategories(),
     listBudgets(),
+    listIncome(),
     safeCcl(),
   ]);
   const expenses = rows.map(toDomainExpense);
@@ -37,6 +40,9 @@ export default async function PresupuestosPage() {
     })
   );
 
+  const incomeBy = new Map(income.map((i) => [i.month, i.amountArs]));
+  const spentBy = new Map(monthlyTotals(expenses, ccl).map((p) => [p.month, p.amountArs]));
+
   const totalBudget = budgets.reduce((s, b) => s + b.amountArs, 0);
 
   return (
@@ -58,6 +64,14 @@ export default async function PresupuestosPage() {
       )}
 
       <div className="flex flex-col gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Ingresos por mes</h2>
+        {months.map((m) => (
+          <IncomeForm key={m} month={m} amountArs={incomeBy.get(m) ?? null} spentArs={spentBy.get(m) ?? 0} />
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Límite por categoría</h2>
         {names.map((name) => (
           <BudgetForm
             key={name}

@@ -95,20 +95,23 @@ export default async function CategoriaPage({
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           {month ? "Gasto del mes" : "Gasto acumulado"}
         </p>
-        <p className="mt-1 text-3xl font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
-          {formatArs(detail.totalArs)}
-        </p>
-        {/* Only meaningful next to a single month's total — a month-over-month
-            delta beside an accumulated figure would compare unrelated numbers. */}
-        {month !== null && detail.momDeltaPct !== null && (
-          <span
-            className={`mt-2 inline-block max-w-full rounded-full px-2 py-0.5 text-xs ${pnlPillClass(detail.momDeltaPct)}`}
-          >
-            {/* The number must not break away from its sign; only the trailing
-                words may wrap if the pill runs out of room. */}
-            <span className="whitespace-nowrap">{formatPercentSigned(detail.momDeltaPct)}</span> vs mes anterior
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className="text-2xl font-semibold tabular-nums text-neutral-900 min-[360px]:text-3xl dark:text-neutral-100">
+            {formatArs(detail.totalArs)}
           </span>
-        )}
+          {/* Only meaningful next to a single month's total — a month-over-month
+              delta beside an accumulated figure would compare unrelated numbers. */}
+          {month !== null && detail.momDeltaPct !== null && (
+            <>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${pnlPillClass(detail.momDeltaPct)}`}
+              >
+                {formatPercentSigned(detail.momDeltaPct)}
+              </span>
+              <span className="text-[11px] text-neutral-500 dark:text-neutral-400">vs mes anterior</span>
+            </>
+          )}
+        </div>
         {/* Two columns: at 375px a third one wraps "Promedio mensual" onto two
             lines and leaves its amount touching the tile edge. */}
         <div className="mt-4 grid grid-cols-2 gap-2">

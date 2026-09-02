@@ -21,22 +21,27 @@ export function ExpensesKpiHeader({
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-accent-soft to-white p-5 shadow-sm dark:border-neutral-800 dark:from-accent-soft dark:to-neutral-900">
-        {/* flex-wrap so the month-over-month pill drops to its own line instead
-            of pushing past the card: the amount is a single unbreakable number
-            in text-3xl and cannot shrink to make room. */}
-        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-          <div className="min-w-0">
-            <div className="text-xs text-neutral-500 dark:text-neutral-400">{totalLabel}</div>
-            <div className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+        <div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">{totalLabel}</div>
+          {/* The delta sits beside the amount. Only the percentage rides there —
+              "vs mes anterior" is a caption that may wrap — and the amount steps
+              down a size on narrow phones so the pair always fits on one line. */}
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span className="text-2xl font-semibold text-neutral-900 min-[360px]:text-3xl dark:text-neutral-100">
               {formatArs(summary.combinedArs)}
-            </div>
-          </div>
-          {momDeltaPct !== null && (
-            // More spend vs last month is "bad" (red), less is "good" (green) → invert the sign for coloring.
-            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${pnlPillClass(-momDeltaPct)}`}>
-              {formatPercentSigned(momDeltaPct)} vs mes ant.
             </span>
-          )}
+            {momDeltaPct !== null && (
+              <>
+                {/* More spend vs last month is "bad" (red), less is "good" (green) → invert the sign for coloring. */}
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${pnlPillClass(-momDeltaPct)}`}
+                >
+                  {formatPercentSigned(momDeltaPct)}
+                </span>
+                <span className="text-[11px] text-neutral-500 dark:text-neutral-400">vs mes anterior</span>
+              </>
+            )}
+          </div>
         </div>
         {summary.totalUsd > 0 && (
           <div className="mt-2 border-t border-neutral-900/5 pt-2 text-xs text-neutral-500 dark:border-white/5 dark:text-neutral-400">
