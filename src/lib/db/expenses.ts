@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "./client";
 import {
   categoryRules,
@@ -128,8 +128,49 @@ export async function listImports(): Promise<ExpenseImport[]> {
   return db.select().from(expenseImports).orderBy(desc(expenseImports.statementPeriod));
 }
 
-export async function updateExpenseCategory(id: string, category: string): Promise<void> {
-  await db.update(expenses).set({ category, updatedAt: new Date() }).where(eq(expenses.id, id));
+/**
+ * Recategorizes a movement — and, when it belongs to an installment plan, every
+ * other cuota of the same purchase. Recategorizing "cuota 3/6" and leaving the
+ * other five where they were would split one purchase across two categories and
+ * quietly corrupt every total.
+ *
+ * The other cuotas are found the same way `computeActiveInstallments` groups
+ * them: same card, merchant, plan length and currency, and the same anchor
+ * (`billing month − cuota number`), which stays constant across a purchase's
+ * life even when the issuer rounds or revalues individual cuotas.
+ *
+ * Returns how many rows changed, so the UI can say when it touched more than one.
+ */
+export async function updateExpenseCategory(id: string, category: string): Promise<number> {
+  const [row] = await db.select().from(expenses).where(eq(expenses.id, id));
+  if (!row) return 0;
+
+  const isInstallment = row.installmentTotal !== null && row.installmentTotal > 1 && row.installmentCurrent !== null;
+  if (!isInstallment || !row.billingMonth) {
+    await db.update(expenses).set({ category, updatedAt: new Date() }).where(eq(expenses.id, id));
+    return 1;
+  }
+
+  const [y, m] = row.billingMonth.split("-").map(Number);
+  const anchor = y * 12 + m - row.installmentCurrent!;
+
+  const updated = await db
+    .update(expenses)
+    .set({ category, updatedAt: new Date() })
+    .where(
+      and(
+        eq(expenses.source, row.source),
+        eq(expenses.merchant, row.merchant),
+        eq(expenses.installmentTotal, row.installmentTotal!),
+        eq(expenses.currency, row.currency),
+        sql`(split_part(${expenses.billingMonth}, '-', 1)::int * 12
+             + split_part(${expenses.billingMonth}, '-', 2)::int
+             - ${expenses.installmentCurrent}) = ${anchor}`
+      )
+    )
+    .returning({ id: expenses.id });
+
+  return updated.length;
 }
 
 export async function deleteExpense(id: string): Promise<void> {

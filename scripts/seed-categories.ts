@@ -23,8 +23,10 @@ const CATEGORIES: { name: string; emoji: string; sort: number }[] = [
   { name: "Indumentaria", emoji: "👕", sort: 70 },
   { name: "Hogar", emoji: "🏠", sort: 80 },
   { name: "Tecnología", emoji: "💻", sort: 90 },
+  { name: "Librería", emoji: "📚", sort: 92 },
   { name: "Entretenimiento", emoji: "🎬", sort: 95 },
   { name: "Viajes", emoji: "✈️", sort: 100 },
+  { name: "Inversiones", emoji: "📈", sort: 105 },
   { name: "Impuestos", emoji: "🧾", sort: 110 },
   { name: "Pagos", emoji: "💵", sort: 120 },
   { name: "Otros", emoji: "🏷️", sort: 130 },
@@ -62,8 +64,16 @@ const RULES: { pattern: string; category: string; priority: number }[] = [
   ),
   // Farmacia — salud y también perfumería/cosmética, que se compran en el mismo lugar
   ...["farmacity", "farmacia", "hospital", "clinica", "sanatorio", "osde", "swiss medical", "galeno", "medife", "medicus", "laboratorio", "optica",
-      "perfum", "juleriaque", "fragancia", "essenza", "sephora", "the body shop", "lush", "maquillaje", "cosmetica", "cosmeticos", "isadora", "avon", "natura cosmeticos", "get the look"].map(
+      "perfum", "juleriaque", "fragancia", "essenza", "sephora", "the body shop", "lush", "maquillaje", "cosmetica", "cosmeticos", "isadora", "avon", "natura cosmeticos", "get the look", "unifungi"].map(
     (p) => ({ pattern: p, category: "Farmacia", priority: 10 })
+  ),
+  // Inversiones — brokers y agentes de bolsa
+  ...["ecovalores", "ecovaloressa", "balanz", "iol invertironline", "bull market", "cocos capital"].map(
+    (p) => ({ pattern: p, category: "Inversiones", priority: 20 })
+  ),
+  // Librería
+  ...["kel ediciones", "libreria", "cuspide", "yenny", "el ateneo"].map(
+    (p) => ({ pattern: p, category: "Librería", priority: 20 })
   ),
   // Indumentaria — "juleriaque" salió de acá: es perfumería, va a Farmacia
   ...["zara", "adidas", "nike", "dexter", "stock center", "cheeky", "mimo", "prune", "montagne", "kevingston", "puma", "pumasports", "calzados", "zapatos"].map(

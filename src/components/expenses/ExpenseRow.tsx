@@ -9,6 +9,8 @@ import type { DomainExpense } from "@/lib/expenses/types";
 export function ExpenseRow({ expense, categories }: { expense: DomainExpense; categories: string[] }) {
   const [pending, startTransition] = useTransition();
   const [category, setCategory] = useState(expense.category);
+  // How many rows the last change touched, so a plan-wide edit says so.
+  const [spread, setSpread] = useState<number | null>(null);
   const fmt = expense.currency === "USD" ? formatUsd : formatArs;
   const isCredit = expense.amount < 0 || expense.kind === "refund" || expense.kind === "payment";
 
@@ -37,7 +39,11 @@ export function ExpenseRow({ expense, categories }: { expense: DomainExpense; ca
           onChange={(e) => {
             const next = e.target.value;
             setCategory(next);
-            startTransition(() => updateCategoryAction(expense.id, next));
+            setSpread(null);
+            startTransition(async () => {
+              const changed = await updateCategoryAction(expense.id, next);
+              setSpread(changed);
+            });
           }}
           className="flex-1 rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 text-xs text-neutral-700 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
         >
@@ -61,6 +67,12 @@ export function ExpenseRow({ expense, categories }: { expense: DomainExpense; ca
           ✕
         </button>
       </div>
+
+      {spread !== null && spread > 1 && (
+        <p className="mt-1.5 text-[11px] text-accent">
+          Se aplicó a las {spread} cuotas de esta compra.
+        </p>
+      )}
     </div>
   );
 }

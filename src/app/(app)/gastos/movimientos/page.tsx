@@ -16,7 +16,7 @@ import { SOURCE_LABEL } from "@/lib/expenses/labels";
 import { PeriodToggle } from "@/components/expenses/PeriodToggle";
 import { ExpenseRow } from "@/components/expenses/ExpenseRow";
 import { FilterBar } from "@/components/expenses/FilterBar";
-import { FilterPills } from "@/components/expenses/FilterPills";
+import { FilterDropdown } from "@/components/expenses/FilterDropdown";
 import { ActiveFilterChips } from "@/components/expenses/ActiveFilterChips";
 import { ResultsSummary } from "@/components/expenses/ResultsSummary";
 import { SortMenu } from "@/components/expenses/SortMenu";
@@ -25,6 +25,10 @@ import { EmptyState } from "@/components/EmptyState";
 export const dynamic = "force-dynamic";
 
 const BASE = "/gastos/movimientos";
+
+// "manual" is the source for hand-entered movements; there are none, and it
+// isn't a card, so it has no place in a card filter.
+const FILTERABLE_SOURCES = EXPENSE_SOURCES.filter((s) => s !== "manual");
 
 export default async function MovimientosPage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
   const [rows, categories, ccl, raw] = await Promise.all([
@@ -81,26 +85,30 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
         />
       </div>
 
-      <FilterPills
-        basePath={BASE}
-        filters={filters}
-        label="Filtrar por categoría"
-        allLabel="Todas"
-        options={categoryNames.map((c) => ({ value: c, label: c }))}
-        selected={filters.categories}
-        patchFor={(categories) => ({ categories })}
-      />
-      <FilterPills
-        basePath={BASE}
-        filters={filters}
-        label="Filtrar por tarjeta"
-        allLabel="Todas las tarjetas"
-        options={EXPENSE_SOURCES.map((s) => ({ value: s, label: SOURCE_LABEL[s] }))}
-        selected={filters.sources}
-        patchFor={(sources) => ({ sources: sources as typeof filters.sources })}
-      />
+      {/* Two rows: the three controls side by side truncate to "Cat…" on a
+          320px screen. */}
+      <div className="flex items-start gap-2">
+        <FilterDropdown
+          basePath={BASE}
+          filters={filters}
+          label="Categoría"
+          allLabel="Todas las categorías"
+          options={categoryNames.map((c) => ({ value: c, label: c }))}
+          selected={filters.categories}
+          patchFor={(categories) => ({ categories })}
+        />
+        <FilterDropdown
+          basePath={BASE}
+          filters={filters}
+          label="Tarjeta"
+          allLabel="Todas las tarjetas"
+          options={FILTERABLE_SOURCES.map((s) => ({ value: s, label: SOURCE_LABEL[s] }))}
+          selected={filters.sources}
+          patchFor={(sources) => ({ sources: sources as typeof filters.sources })}
+        />
+      </div>
 
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <FilterBar basePath={BASE} filters={filters} />
         </div>

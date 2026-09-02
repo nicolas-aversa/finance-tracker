@@ -32,9 +32,9 @@ export function CategoryTrend({
 
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="flex items-baseline justify-between">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Evolución</h2>
-        <span className="text-xs tabular-nums text-neutral-400 dark:text-neutral-500">
+        <span className="whitespace-nowrap text-xs tabular-nums text-neutral-400 dark:text-neutral-500">
           promedio {formatArs(avg)}
         </span>
       </div>

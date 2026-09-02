@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { tickerColor } from "@/lib/domain/chart-colors";
+import { tailColor, tickerColor } from "@/lib/domain/chart-colors";
 import { formatArs } from "@/lib/format";
 import type { CategorySlice } from "@/lib/expenses/aggregate";
 
@@ -7,8 +7,10 @@ const CENTER = 100;
 const OUTER_R = 80;
 const INNER_R = 50;
 const GAP = 2 / OUTER_R;
-// Part-to-whole stops reading past ~6 wedges; the tail folds into "Otros".
-const MAX_SLICES = 6;
+// The validated categorical palette has 6 hues. Every category still gets its
+// own wedge; past the sixth they take neutral steps instead of invented hues,
+// which would be indistinguishable under colour-vision deficiency.
+const COLORED_SLICES = 6;
 
 function polar(r: number, a: number) {
   return { x: CENTER + r * Math.sin(a), y: CENTER - r * Math.cos(a) };
@@ -20,25 +22,15 @@ function arc(a0: number, a1: number): string {
 }
 
 /**
- * Spend split by category. When `hrefs` maps a category to a URL, its arc and
- * legend row become links into that category's detail — the aggregated
- * "Otros (N)" bucket has no entry, so it stays inert.
- * A plain record, not a callback, so this stays trivially serializable.
+ * Spend split by category — every category gets its own wedge and legend row.
+ * When `hrefs` maps a category to a URL, its arc and row link into that
+ * category's detail. A plain record, not a callback, so this stays trivially
+ * serializable.
  */
 export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; hrefs?: Record<string, string> }) {
-  const positive = slices.filter((s) => s.amountArs > 0);
-  if (positive.length === 0) return null;
+  const display = slices.filter((s) => s.amountArs > 0);
+  if (display.length === 0) return null;
 
-  const top = positive.slice(0, MAX_SLICES);
-  const rest = positive.slice(MAX_SLICES);
-  // Beyond MAX_SLICES the tail is folded into one wedge. It says what it is —
-  // "Otras 4 categorías" — because a bare "Resto (4)" explains nothing, and
-  // plain "Otros" would collide with the real category of that name.
-  const restLabel = rest.length === 1 ? "Otra categoría" : `Otras ${rest.length} categorías`;
-  const restNames = rest.map((r) => r.category).join(", ");
-  const display = rest.length
-    ? [...top, { category: restLabel, amountArs: rest.reduce((s, r) => s + r.amountArs, 0) }]
-    : top;
   const total = display.reduce((s, d) => s + d.amountArs, 0);
 
   const arcs = display.reduce<{ d: CategorySlice; path: string; color: { light: string; dark: string }; end: number }[]>(
@@ -47,7 +39,8 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
       const angle = (d.amountArs / total) * 2 * Math.PI;
       const pad = Math.min(GAP / 2, (angle / 2) * 0.9);
       const path = arc(start + pad, Math.max(start + angle - pad, start + pad));
-      out.push({ d, path, color: tickerColor(i), end: start + angle });
+      const color = i < COLORED_SLICES ? tickerColor(i) : tailColor(i - COLORED_SLICES);
+      out.push({ d, path, color, end: start + angle });
       return out;
     },
     []
@@ -113,12 +106,6 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
                     {((d.amountArs / total) * 100).toFixed(0)}%
                   </span>
                 </span>
-                {/* Name the folded categories, so the bucket isn't a mystery. */}
-                {d.category === restLabel && (
-                  <span className="mt-0.5 line-clamp-2 block text-[11px] text-neutral-400 dark:text-neutral-500">
-                    {restNames}
-                  </span>
-                )}
               </span>
             </>
           );
