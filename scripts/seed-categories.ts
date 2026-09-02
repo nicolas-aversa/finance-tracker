@@ -19,7 +19,7 @@ const CATEGORIES: { name: string; emoji: string; sort: number }[] = [
   { name: "Transporte vehículo", emoji: "🚗", sort: 31 },
   { name: "Servicios", emoji: "💡", sort: 40 },
   { name: "Suscripciones", emoji: "📺", sort: 50 },
-  { name: "Salud", emoji: "💊", sort: 60 },
+  { name: "Farmacia", emoji: "💊", sort: 60 },
   { name: "Indumentaria", emoji: "👕", sort: 70 },
   { name: "Hogar", emoji: "🏠", sort: 80 },
   { name: "Tecnología", emoji: "💻", sort: 90 },
@@ -60,12 +60,13 @@ const RULES: { pattern: string; category: string; priority: number }[] = [
       "anthropic", "claude", "crunchyroll", "linkedin"].map(
     (p) => ({ pattern: p, category: "Suscripciones", priority: 20 })
   ),
-  // Salud
-  ...["farmacity", "farmacia", "hospital", "clinica", "sanatorio", "osde", "swiss medical", "galeno", "medife", "medicus", "laboratorio", "optica"].map(
-    (p) => ({ pattern: p, category: "Salud", priority: 10 })
+  // Farmacia — salud y también perfumería/cosmética, que se compran en el mismo lugar
+  ...["farmacity", "farmacia", "hospital", "clinica", "sanatorio", "osde", "swiss medical", "galeno", "medife", "medicus", "laboratorio", "optica",
+      "perfum", "juleriaque", "fragancia", "essenza", "sephora", "the body shop", "lush", "maquillaje", "cosmetica", "cosmeticos", "isadora", "avon", "natura cosmeticos", "get the look"].map(
+    (p) => ({ pattern: p, category: "Farmacia", priority: 10 })
   ),
-  // Indumentaria
-  ...["zara", "adidas", "nike", "dexter", "stock center", "cheeky", "mimo", "prune", "montagne", "kevingston", "puma", "pumasports", "juleriaque", "calzados", "zapatos"].map(
+  // Indumentaria — "juleriaque" salió de acá: es perfumería, va a Farmacia
+  ...["zara", "adidas", "nike", "dexter", "stock center", "cheeky", "mimo", "prune", "montagne", "kevingston", "puma", "pumasports", "calzados", "zapatos"].map(
     (p) => ({ pattern: p, category: "Indumentaria", priority: 10 })
   ),
   // Entretenimiento

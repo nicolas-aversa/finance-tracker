@@ -116,12 +116,11 @@ describe("filtersToSearchParams / buildHref", () => {
   });
 
   it("preserves the other filters when patching one", () => {
-    const f = filters({ month: "2026-06", categories: ["Gastronomía"], query: "cafe" });
+    const f = filters({ month: "2026-06", categories: ["Gastronomía"] });
     const href = buildHref("/gastos/movimientos", f, { month: "2026-07" });
     const qs = new URL(href, "http://x").searchParams;
     expect(qs.get("mes")).toBe("2026-07");
     expect(qs.getAll("cat")).toEqual(["Gastronomía"]);
-    expect(qs.get("q")).toBe("cafe");
   });
 
   it("drops a filter from the URL when the patch clears it", () => {
@@ -135,7 +134,6 @@ describe("filtersToSearchParams / buildHref", () => {
       month: "2026-06",
       categories: ["Gastronomía"],
       sources: ["amex_galicia"],
-      query: "cafe",
       from: "2026-06-01",
       to: "2026-06-30",
       minArs: 500,
@@ -167,14 +165,14 @@ describe("activeChips", () => {
   });
 
   it("counts every active dimension", () => {
-    const f = filters({ query: "cafe", minArs: 100, installmentsOnly: true });
+    const f = filters({ minArs: 100, maxArs: 5000, installmentsOnly: true });
     expect(activeFilterCount(f)).toBe(3);
   });
 });
 
 describe("clearedFilters", () => {
   it("keeps the month and sort but drops the narrowing filters", () => {
-    const f = filters({ month: "2026-06", sort: "monto", dir: "asc", query: "cafe", categories: ["Otros"] });
+    const f = filters({ month: "2026-06", sort: "monto", dir: "asc", categories: ["Otros"] });
     expect(clearedFilters(f)).toEqual(filters({ month: "2026-06", sort: "monto", dir: "asc" }));
   });
 });
@@ -217,22 +215,14 @@ describe("filterExpenses", () => {
     expect(ids(filters({ installmentsOnly: true }))).toEqual(["e"]);
   });
 
-  it("searches merchant and description, ignoring case and accents", () => {
-    expect(ids(filters({ query: "starbucks" }))).toEqual(["a"]);
-    expect(ids(filters({ query: "STÁRBUCKS" }))).toEqual(["a"]);
-  });
 
-  it("matches on description even when the merchant doesn't", () => {
-    const list = [exp({ id: "z", merchant: "COMERCIO", description: "SUSCRIPCIÓN ANUAL" })];
-    expect(filterExpenses(list, filters({ query: "suscripcion" }), CCL).map((e) => e.id)).toEqual(["z"]);
-  });
 
   it("combines filters conjunctively", () => {
     expect(ids(filters({ month: "2026-06", categories: ["Otros"], minArs: 1000 }))).toEqual(["c"]);
   });
 
   it("returns nothing when the filters exclude everything", () => {
-    expect(ids(filters({ categories: ["Gastronomía"], query: "netflix" }))).toEqual([]);
+    expect(ids(filters({ categories: ["Gastronomía"], minArs: 999999 }))).toEqual([]);
   });
 });
 
@@ -255,27 +245,15 @@ describe("sortExpenses", () => {
     expect(ids("monto", "asc")).toEqual(["b", "a", "c"]);
   });
 
-  it("sorts categories accent-insensitively", () => {
-    // "Ñandú" must fall between "Indumentaria" and "Otros", not after Z.
-    const accented = [
-      exp({ id: "n", category: "Ñandú" }),
-      exp({ id: "i", category: "Indumentaria" }),
-      exp({ id: "o", category: "Otros" }),
-    ];
-    expect(sortExpenses(accented, "categoria", "asc", CCL).map((e) => e.id)).toEqual(["i", "n", "o"]);
-  });
 
-  it("sorts by category", () => {
-    expect(ids("categoria", "asc")).toEqual(["c", "a", "b"]);
-  });
 
   it("breaks ties deterministically, newest first", () => {
     const tied = [
       exp({ id: "x2", category: "IGUAL", amount: 100, txDate: "2026-06-01" }),
       exp({ id: "x1", category: "IGUAL", amount: 100, txDate: "2026-06-02" }),
     ];
-    expect(sortExpenses(tied, "categoria", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
-    expect(sortExpenses([...tied].reverse(), "categoria", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
+    expect(sortExpenses(tied, "monto", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
+    expect(sortExpenses([...tied].reverse(), "monto", "asc", CCL).map((e) => e.id)).toEqual(["x1", "x2"]);
   });
 
   it("does not mutate the input array", () => {

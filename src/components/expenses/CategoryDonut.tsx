@@ -52,10 +52,7 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
 
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Gasto por categoría</h2>
-        {hrefs && <span className="text-[11px] text-neutral-400 dark:text-neutral-500">tocá para ver el detalle</span>}
-      </div>
+      <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Gasto por categoría</h2>
       <div className="relative mx-auto mt-3 w-full max-w-[200px]">
         <svg viewBox="0 0 200 200" className="w-full" role="img" aria-label="Gasto por categoría">
           {arcs.map(({ d, path, color }) => {
@@ -89,37 +86,63 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
       <ul className="mt-4 flex flex-col gap-1">
         {arcs.map(({ d, color }) => {
           const href = hrefs?.[d.category];
+          // Two lines: the name gets the full row width, so long categories
+          // ("Transporte público") read in full instead of truncating against
+          // the amount and the chevron.
           const row = (
             <>
               <span
-                className="viz-mark h-3 w-3 shrink-0 rounded-full"
+                className="viz-mark mt-1 h-3 w-3 shrink-0 rounded-full"
                 style={{
                   // @ts-expect-error custom props
                   "--viz-light": color.light,
                   "--viz-dark": color.dark,
                 }}
               />
-              <span className="flex-1 truncate font-medium text-neutral-900 dark:text-neutral-100">{d.category}</span>
-              <span className="tabular-nums text-neutral-500 dark:text-neutral-400">{formatArs(d.amountArs)}</span>
-              <span className="w-10 text-right tabular-nums text-neutral-400 dark:text-neutral-500">
-                {((d.amountArs / total) * 100).toFixed(0)}%
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium text-neutral-900 dark:text-neutral-100">
+                  {d.category}
+                </span>
+                <span className="block text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+                  {formatArs(d.amountArs)}
+                  <span className="text-neutral-400 dark:text-neutral-500">
+                    {" · "}
+                    {((d.amountArs / total) * 100).toFixed(0)}%
+                  </span>
+                </span>
               </span>
             </>
           );
           return (
             <li key={d.category}>
               {href ? (
+                /* A bordered row with a chevron button reads as tappable on
+                   sight; a bare "›" beside plain text did not. */
                 <Link
                   href={href}
-                  className="-mx-2 flex items-center gap-2 rounded-lg px-2 py-1 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  aria-label={`Ver los gastos de ${d.category}`}
+                  className="flex items-start gap-2 rounded-xl border border-neutral-200 bg-neutral-50/60 px-3 py-2 text-sm transition-colors hover:border-accent hover:bg-accent-soft dark:border-neutral-800 dark:bg-neutral-800/40 dark:hover:border-accent"
                 >
                   {row}
-                  <span aria-hidden className="text-neutral-300 dark:text-neutral-600">›</span>
+                  <span
+                    aria-hidden
+                    className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-neutral-300 text-neutral-500 dark:border-neutral-600 dark:text-neutral-400"
+                  >
+                    <svg viewBox="0 0 20 20" fill="none" className="h-3 w-3">
+                      <path
+                        d="M7.5 4.5l6 5.5-6 5.5"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
                 </Link>
               ) : (
-                <span className="-mx-2 flex items-center gap-2 px-2 py-1 text-sm">
+                <span className="flex items-start gap-2 rounded-xl border border-transparent px-3 py-2 text-sm">
                   {row}
-                  <span aria-hidden className="w-2" />
+                  <span aria-hidden className="w-5 shrink-0" />
                 </span>
               )}
             </li>

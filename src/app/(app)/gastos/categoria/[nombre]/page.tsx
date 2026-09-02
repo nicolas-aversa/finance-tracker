@@ -101,8 +101,12 @@ export default async function CategoriaPage({
         {/* Only meaningful next to a single month's total — a month-over-month
             delta beside an accumulated figure would compare unrelated numbers. */}
         {month !== null && detail.momDeltaPct !== null && (
-          <span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs ${pnlPillClass(detail.momDeltaPct)}`}>
-            {formatPercentSigned(detail.momDeltaPct)} vs mes anterior
+          <span
+            className={`mt-2 inline-block max-w-full rounded-full px-2 py-0.5 text-xs ${pnlPillClass(detail.momDeltaPct)}`}
+          >
+            {/* The number must not break away from its sign; only the trailing
+                words may wrap if the pill runs out of room. */}
+            <span className="whitespace-nowrap">{formatPercentSigned(detail.momDeltaPct)}</span> vs mes anterior
           </span>
         )}
         {/* Two columns: at 375px a third one wraps "Promedio mensual" onto two

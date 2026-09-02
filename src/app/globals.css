@@ -45,6 +45,16 @@ body {
     @apply rounded-xl bg-accent px-4 py-3 text-base font-medium text-accent-foreground shadow-sm shadow-accent/20 transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60;
   }
 
+  /* Horizontal pill strips scroll by swipe; a permanent scrollbar under them
+     is desktop-only chrome that eats a row of space and reads as a stray line. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Chart marks: color is data-driven per instance via --viz-light/--viz-dark
      custom properties (set inline), so Tailwind's static class scanner can't
      see the values — this swaps light/dark without needing arbitrary classes.

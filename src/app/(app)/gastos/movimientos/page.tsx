@@ -11,12 +11,15 @@ import {
   sortExpenses,
   type RawSearchParams,
 } from "@/lib/expenses/filters";
+import { EXPENSE_SOURCES } from "@/lib/db/schema";
+import { SOURCE_LABEL } from "@/lib/expenses/labels";
 import { PeriodToggle } from "@/components/expenses/PeriodToggle";
 import { ExpenseRow } from "@/components/expenses/ExpenseRow";
 import { FilterBar } from "@/components/expenses/FilterBar";
+import { FilterPills } from "@/components/expenses/FilterPills";
 import { ActiveFilterChips } from "@/components/expenses/ActiveFilterChips";
 import { ResultsSummary } from "@/components/expenses/ResultsSummary";
-import { SortControl } from "@/components/expenses/SortControl";
+import { SortMenu } from "@/components/expenses/SortMenu";
 import { EmptyState } from "@/components/EmptyState";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +67,7 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Movimientos</h1>
           <Link
-            href={buildHref("/gastos", { ...filters, categories: [], sources: [], query: "" })}
+            href={buildHref("/gastos", { ...filters, categories: [], sources: [] })}
             className="text-xs text-neutral-400 underline-offset-2 hover:text-accent hover:underline dark:text-neutral-500"
           >
             ← Volver
@@ -78,9 +81,33 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
         />
       </div>
 
-      <FilterBar basePath={BASE} filters={filters} categories={categoryNames} />
+      <FilterPills
+        basePath={BASE}
+        filters={filters}
+        label="Filtrar por categoría"
+        allLabel="Todas"
+        options={categoryNames.map((c) => ({ value: c, label: c }))}
+        selected={filters.categories}
+        patchFor={(categories) => ({ categories })}
+      />
+      <FilterPills
+        basePath={BASE}
+        filters={filters}
+        label="Filtrar por tarjeta"
+        allLabel="Todas las tarjetas"
+        options={EXPENSE_SOURCES.map((s) => ({ value: s, label: SOURCE_LABEL[s] }))}
+        selected={filters.sources}
+        patchFor={(sources) => ({ sources: sources as typeof filters.sources })}
+      />
+
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <FilterBar basePath={BASE} filters={filters} />
+        </div>
+        <SortMenu basePath={BASE} filters={filters} />
+      </div>
+
       <ActiveFilterChips basePath={BASE} filters={filters} />
-      <SortControl basePath={BASE} filters={filters} />
       <ResultsSummary totals={totals} />
 
       {visible.length === 0 ? (

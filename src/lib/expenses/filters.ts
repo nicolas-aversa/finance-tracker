@@ -1,12 +1,11 @@
 import { EXPENSE_SOURCES, type ExpenseSource } from "@/lib/db/schema";
 import { isSpend, spendArs } from "./aggregate";
-import { normalizeText } from "./text";
 import type { DomainExpense } from "./types";
 
-export type SortKey = "fecha" | "monto" | "categoria";
+export type SortKey = "fecha" | "monto";
 export type SortDir = "asc" | "desc";
 
-const SORT_KEYS: SortKey[] = ["fecha", "monto", "categoria"];
+const SORT_KEYS: SortKey[] = ["fecha", "monto"];
 const SORT_DIRS: SortDir[] = ["asc", "desc"];
 
 /** Every filter the movements list understands. All of it lives in the URL. */
@@ -14,7 +13,6 @@ export type ExpenseFilters = {
   month: string | null; // null = "resumen" (every month)
   categories: string[];
   sources: ExpenseSource[];
-  query: string;
   from: string | null; // yyyy-mm-dd
   to: string | null; // yyyy-mm-dd
   minArs: number | null; // compared against the ARS-equivalent amount
@@ -30,7 +28,6 @@ export const DEFAULT_FILTERS: ExpenseFilters = {
   month: null,
   categories: [],
   sources: [],
-  query: "",
   from: null,
   to: null,
   minArs: null,
@@ -101,7 +98,6 @@ export function parseExpenseFilters(
     month,
     categories,
     sources,
-    query: toSingle(raw.q),
     from,
     to,
     minArs,
@@ -118,7 +114,6 @@ export function filtersToSearchParams(f: ExpenseFilters): URLSearchParams {
   if (f.month) p.set("mes", f.month);
   for (const c of f.categories) p.append("cat", c);
   for (const s of f.sources) p.append("tarjeta", s);
-  if (f.query) p.set("q", f.query);
   if (f.from) p.set("desde", f.from);
   if (f.to) p.set("hasta", f.to);
   if (f.minArs !== null) p.set("min", String(f.minArs));
@@ -154,7 +149,6 @@ export function activeChips(f: ExpenseFilters): FilterChip[] {
   for (const s of f.sources) {
     chips.push({ key: `src:${s}`, label: s, clear: { sources: f.sources.filter((x) => x !== s) } });
   }
-  if (f.query) chips.push({ key: "q", label: `"${f.query}"`, clear: { query: "" } });
   if (f.from) chips.push({ key: "desde", label: `desde ${f.from}`, clear: { from: null } });
   if (f.to) chips.push({ key: "hasta", label: `hasta ${f.to}`, clear: { to: null } });
   if (f.minArs !== null) chips.push({ key: "min", label: `≥ ${f.minArs}`, clear: { minArs: null } });
@@ -188,7 +182,6 @@ export function filterExpenses(
   f: ExpenseFilters,
   cclRate: number
 ): DomainExpense[] {
-  const needle = f.query ? normalizeText(f.query) : "";
   const categories = f.categories.length ? new Set(f.categories) : null;
   const sources = f.sources.length ? new Set<string>(f.sources) : null;
 
@@ -207,10 +200,6 @@ export function filterExpenses(
       if (f.maxArs !== null && ars > f.maxArs) return false;
     }
 
-    if (needle) {
-      const haystack = `${normalizeText(e.merchant)} ${normalizeText(e.description)}`;
-      if (!haystack.includes(needle)) return false;
-    }
     return true;
   });
 }
@@ -223,7 +212,6 @@ export function sortExpenses(
   cclRate = 1
 ): DomainExpense[] {
   const sign = dir === "asc" ? 1 : -1;
-  const collator = new Intl.Collator("es", { sensitivity: "base" });
 
   return [...list].sort((a, b) => {
     let cmp = 0;
@@ -233,9 +221,6 @@ export function sortExpenses(
         break;
       case "monto":
         cmp = spendArs(a, cclRate) - spendArs(b, cclRate);
-        break;
-      case "categoria":
-        cmp = collator.compare(a.category, b.category);
         break;
     }
     if (cmp !== 0) return cmp * sign;
