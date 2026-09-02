@@ -31,6 +31,9 @@ export function BenchmarkChart({ points }: { points: BenchmarkPoint[] }) {
 
     const x = (i: number) => PAD_X + (i / (points.length - 1)) * innerW;
     const y = (v: number) => PAD_TOP + innerH - ((v - minV) / range) * innerH;
+    // Both series are indexed to 100 at t0, so 100 is the "flat" line. Without
+    // it you can't tell gains from losses — it's the chart's only real gridline.
+    const baselineY = minV <= 100 && maxV >= 100 ? y(100) : null;
 
     const line = (key: "portfolio" | "benchmark") =>
       points
@@ -39,7 +42,7 @@ export function BenchmarkChart({ points }: { points: BenchmarkPoint[] }) {
         .map((s, i) => `${i === 0 ? "M" : "L"} ${s}`)
         .join(" ");
 
-    return { x, y, portfolioPath: line("portfolio"), benchmarkPath: line("benchmark") };
+    return { x, y, baselineY, portfolioPath: line("portfolio"), benchmarkPath: line("benchmark") };
   }, [points]);
 
   if (!chart) return null;
@@ -94,6 +97,27 @@ export function BenchmarkChart({ points }: { points: BenchmarkPoint[] }) {
         onPointerDown={(e) => handlePointer(e.clientX)}
         onPointerLeave={() => setActiveIndex(null)}
       >
+        {chart.baselineY !== null && (
+          <>
+            <line
+              x1={PAD_X}
+              y1={chart.baselineY}
+              x2={WIDTH - PAD_X}
+              y2={chart.baselineY}
+              className="stroke-neutral-200 dark:stroke-neutral-700"
+              strokeWidth={1}
+            />
+            <text
+              x={PAD_X}
+              y={chart.baselineY - 4}
+              fontSize={9}
+              className="fill-neutral-400 dark:fill-neutral-500"
+            >
+              0%
+            </text>
+          </>
+        )}
+
         <path
           d={chart.benchmarkPath}
           fill="none"
@@ -120,6 +144,30 @@ export function BenchmarkChart({ points }: { points: BenchmarkPoint[] }) {
           strokeLinejoin="round"
           strokeLinecap="round"
         />
+
+        {/* End markers: 2px surface ring so they stay legible where the lines cross */}
+        {([
+          ["benchmark", BENCHMARK_COLOR] as const,
+          ["portfolio", PORTFOLIO_COLOR] as const,
+        ]).map(([key, color]) => {
+          const value = last[key];
+          if (value === null) return null;
+          return (
+            <circle
+              key={key}
+              cx={chart.x(points.length - 1)}
+              cy={chart.y(value)}
+              r={4}
+              className="viz-fill stroke-white dark:stroke-neutral-900"
+              strokeWidth={2}
+              style={{
+                // @ts-expect-error custom props
+                "--viz-light": color.light,
+                "--viz-dark": color.dark,
+              }}
+            />
+          );
+        })}
 
         {activeIndex !== null && (
           <line

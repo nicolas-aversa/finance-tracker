@@ -3,7 +3,6 @@ import { categorizeMerchant, normalizeMerchant, DEFAULT_CATEGORY } from "../cate
 import {
   categoryDetail,
   listMonths,
-  monthlyCategoryStacks,
   monthlyTotals,
   monthOverMonth,
   periodSummary,
@@ -123,22 +122,25 @@ describe("aggregate", () => {
     expect(listMonths(withCuota)).not.toContain("2025-11");
   });
 
-  it("builds stacked category segments per month with a net-out of refunds", () => {
+  it("nets refunds against their category and never counts payments as spend", () => {
     const withRefund = [
       ...expenses,
       // a refund (negative) in June Gastronomía nets against a charge
       exp({ txDate: "2026-06-22", billingMonth: "2026-06", amount: 3000, currency: "ARS", category: "Gastronomía" }),
       exp({ txDate: "2026-06-25", billingMonth: "2026-06", amount: -1000, currency: "ARS", category: "Gastronomía", kind: "refund" }),
     ];
-    const stacks = monthlyCategoryStacks(withRefund, CCL);
-    const june = stacks.find((s) => s.month === "2026-06")!;
-    // segments sum to the bar total, and each carries a color
-    expect(june.total).toBeCloseTo(june.segments.reduce((s, x) => s + x.amountArs, 0), 6);
-    expect(june.segments.every((s) => s.light.startsWith("#"))).toBe(true);
-    const gastro = june.segments.find((s) => s.category === "Gastronomía")!;
+    const june = periodSummary(withRefund, "2026-06", CCL);
+    const gastro = june.byCategory.find((c) => c.category === "Gastronomía")!;
     expect(gastro.amountArs).toBe(2000); // 3000 charge − 1000 refund
-    // payments never appear as spend
-    expect(june.segments.some((s) => s.category === "Pagos")).toBe(false);
+    expect(june.byCategory.some((c) => c.category === "Pagos")).toBe(false);
+    // the category split adds up to the period total
+    expect(june.byCategory.reduce((s, c) => s + c.amountArs, 0)).toBeCloseTo(june.combinedArs, 6);
+  });
+
+  it("monthly totals give one point per billing month, oldest first", () => {
+    const totals = monthlyTotals(expenses, CCL);
+    expect(totals.map((t) => t.month)).toEqual(["2026-05", "2026-06"]);
+    expect(totals[0].amountArs).toBe(8000);
   });
 
   it("accumulated summary (month=null) sums every billing month and excludes payments", () => {
@@ -177,6 +179,69 @@ describe("installments", () => {
     const active = computeActiveInstallments(expenses);
     expect(active[0].installmentCurrent).toBe(3);
     expect(active[0].remainingCount).toBe(9);
+  });
+
+  it("keeps one purchase together when the first cuota is rounded differently", () => {
+    // Real statements round cuota 1 apart from the rest (8756.14 then 8756.10).
+    // Keying on the amount used to split this into two groups, leaving the
+    // cuota-1 one frozen as active forever.
+    const expenses = [
+      exp({ billingMonth: "2026-05", merchant: "KEL", amount: 8756.14, installmentCurrent: 1, installmentTotal: 6 }),
+      exp({ billingMonth: "2026-06", merchant: "KEL", amount: 8756.1, installmentCurrent: 2, installmentTotal: 6 }),
+      exp({ billingMonth: "2026-07", merchant: "KEL", amount: 8756.1, installmentCurrent: 3, installmentTotal: 6 }),
+      exp({ billingMonth: "2026-08", merchant: "KEL", amount: 8756.1, installmentCurrent: 4, installmentTotal: 6 }),
+    ];
+    const active = computeActiveInstallments(expenses);
+    expect(active).toHaveLength(1);
+    expect(active[0].installmentCurrent).toBe(4);
+    expect(active[0].remainingCount).toBe(2);
+  });
+
+  it("drops a finished plan even when its cuota amounts drifted", () => {
+    const expenses = [
+      exp({ billingMonth: "2026-05", merchant: "UNIFUNGI", amount: 41176.34, installmentCurrent: 1, installmentTotal: 3 }),
+      exp({ billingMonth: "2026-06", merchant: "UNIFUNGI", amount: 41176.33, installmentCurrent: 2, installmentTotal: 3 }),
+      exp({ billingMonth: "2026-07", merchant: "UNIFUNGI", amount: 41176.33, installmentCurrent: 3, installmentTotal: 3 }),
+    ];
+    expect(computeActiveInstallments(expenses)).toEqual([]);
+    expect(futureCommitmentArs(expenses, CCL)).toBe(0);
+  });
+
+  it("still counts two parallel purchases at the same shop, month and plan", () => {
+    // Two separate ZARA buys, both 3 cuotas starting the same month: they share
+    // an anchor, so they're told apart by both appearing at the newest cuota.
+    const expenses = [
+      exp({ billingMonth: "2026-06", merchant: "ZARA", amount: 120000, installmentCurrent: 1, installmentTotal: 3 }),
+      exp({ billingMonth: "2026-06", merchant: "ZARA", amount: 96663.34, installmentCurrent: 1, installmentTotal: 3 }),
+      exp({ billingMonth: "2026-07", merchant: "ZARA", amount: 120000, installmentCurrent: 2, installmentTotal: 3 }),
+      exp({ billingMonth: "2026-07", merchant: "ZARA", amount: 96663.33, installmentCurrent: 2, installmentTotal: 3 }),
+    ];
+    const active = computeActiveInstallments(expenses);
+    expect(active).toHaveLength(2);
+    expect(active.map((a) => a.remainingCount)).toEqual([1, 1]);
+    expect(futureCommitmentArs(expenses, CCL)).toBeCloseTo(120000 + 96663.33, 6);
+  });
+
+  it("separates two purchases at the same shop that started different months", () => {
+    const expenses = [
+      exp({ billingMonth: "2026-05", merchant: "RIMO", amount: 1000, installmentCurrent: 1, installmentTotal: 6 }),
+      exp({ billingMonth: "2026-06", merchant: "RIMO", amount: 1000, installmentCurrent: 2, installmentTotal: 6 }),
+      // a second purchase starting in June -> its own anchor
+      exp({ billingMonth: "2026-06", merchant: "RIMO", amount: 2000, installmentCurrent: 1, installmentTotal: 6 }),
+    ];
+    const active = computeActiveInstallments(expenses);
+    expect(active).toHaveLength(2);
+    expect(active.map((a) => a.installmentCurrent).sort()).toEqual([1, 2]);
+  });
+
+  it("uses the latest cuota amount, so a revalued plan projects at the new price", () => {
+    const expenses = [
+      exp({ billingMonth: "2026-06", merchant: "PLAZA", amount: 1000, installmentCurrent: 1, installmentTotal: 4 }),
+      exp({ billingMonth: "2026-07", merchant: "PLAZA", amount: 1500, installmentCurrent: 2, installmentTotal: 4 }),
+    ];
+    const active = computeActiveInstallments(expenses);
+    expect(active[0].amountPerInstallment).toBe(1500);
+    expect(active[0].remainingAmount).toBe(3000); // 2 restantes * 1500
   });
 });
 

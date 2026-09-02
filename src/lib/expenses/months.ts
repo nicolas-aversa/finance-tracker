@@ -9,7 +9,6 @@ const MONTH_NAMES = [
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 ];
 const MONTH_SHORT = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-const MONTH_LETTER = ["E", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 
 function monthIndex(month: string): number {
   return Number(month.split("-")[1]) - 1;
@@ -25,9 +24,4 @@ export function monthDisplay(month: string): string {
 export function monthShort(month: string): string {
   const label = MONTH_SHORT[monthIndex(month)] ?? month;
   return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-/** "2026-07" -> "J" — for dense axes where only a hint of the month fits. */
-export function monthLetter(month: string): string {
-  return MONTH_LETTER[monthIndex(month)] ?? "?";
 }

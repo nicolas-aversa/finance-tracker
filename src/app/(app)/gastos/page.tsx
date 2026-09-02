@@ -5,11 +5,11 @@ import { budgetProgress, monthProgressFor } from "@/lib/expenses/budgets";
 import { monthDisplay } from "@/lib/expenses/months";
 import { safeCcl } from "@/lib/prices/safe-ccl";
 import { toDomainExpense, billingMonth } from "@/lib/expenses/types";
-import { listMonths, monthOverMonth, monthlyCategoryStacks, periodSummary } from "@/lib/expenses/aggregate";
+import { listMonths, monthOverMonth, monthlyTotals, periodSummary } from "@/lib/expenses/aggregate";
 import { computeActiveInstallments, futureCommitmentArs } from "@/lib/expenses/installments";
 import { ExpensesKpiHeader } from "@/components/expenses/ExpensesKpiHeader";
 import { CategoryDonut } from "@/components/expenses/CategoryDonut";
-import { MonthlyCategoryBars } from "@/components/expenses/MonthlyCategoryBars";
+import { MonthlyTotals } from "@/components/expenses/MonthlyTotals";
 import { CardBreakdown } from "@/components/expenses/CardBreakdown";
 import { InstallmentsList } from "@/components/expenses/InstallmentsList";
 import { PeriodToggle } from "@/components/expenses/PeriodToggle";
@@ -47,7 +47,7 @@ export default async function GastosPage({ searchParams }: { searchParams: Promi
 
   const summary = periodSummary(expenses, month, ccl);
   const mom = monthOverMonth(expenses, month, ccl);
-  const monthlyStacks = monthlyCategoryStacks(expenses, ccl);
+  const monthly = monthlyTotals(expenses, ccl);
   const installments = computeActiveInstallments(expenses);
   const future = futureCommitmentArs(expenses, ccl);
 
@@ -101,7 +101,7 @@ export default async function GastosPage({ searchParams }: { searchParams: Promi
 
       {isSummary ? (
         <>
-          <MonthlyCategoryBars stacks={monthlyStacks} />
+          <MonthlyTotals points={monthly} />
           <CategoryDonut slices={summary.byCategory} hrefs={categoryHrefs} />
           <CardBreakdown cards={summary.byCard} />
           <InstallmentsList items={installments} />

@@ -7,7 +7,8 @@ const CENTER = 100;
 const OUTER_R = 80;
 const INNER_R = 50;
 const GAP = 2 / OUTER_R;
-const MAX_SLICES = 8;
+// Part-to-whole stops reading past ~6 wedges; the tail folds into "Otros".
+const MAX_SLICES = 6;
 
 function polar(r: number, a: number) {
   return { x: CENTER + r * Math.sin(a), y: CENTER - r * Math.cos(a) };

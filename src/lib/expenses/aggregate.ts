@@ -1,6 +1,5 @@
 import type { ExpenseSource } from "@/lib/db/schema";
 import { toArs, type DomainExpense } from "./types";
-import { tickerColor, OTHER_BUCKET_COLOR } from "@/lib/domain/chart-colors";
 
 /** Payments (paying your bill) aren't spending; everything else is (refunds are negative). */
 export function isSpend(e: DomainExpense): boolean {
@@ -83,64 +82,6 @@ export function periodSummary(expenses: DomainExpense[], month: string | null, c
     topMerchants,
     count: inMonth.length,
   };
-}
-
-export type StackSegment = { category: string; amountArs: number; light: string; dark: string };
-/** One month's bar: total gross spend + the category segments that compose it (consistent colors). */
-export type MonthStack = { month: string; total: number; segments: StackSegment[] };
-
-// The categorical palette has 6 hues; beyond that categories fold into a gray "Otros".
-const MAX_STACK_CATEGORIES = 6;
-const OTROS_BUCKET = "Otros";
-
-/**
- * Per-billing-month category composition for the stacked "Gasto por mes" chart.
- * Categories get a stable color across every month (ranked by total spend) so
- * bars are comparable; the smallest categories fold into a gray "Otros" segment.
- * Only positive category nets are shown (refunds/credits net out silently).
- */
-export function monthlyCategoryStacks(expenses: DomainExpense[], cclRate: number): MonthStack[] {
-  const byMonthCat = new Map<string, Map<string, number>>();
-  const globalCat = new Map<string, number>();
-  for (const e of expenses) {
-    if (!isSpend(e)) continue;
-    const ars = spendArs(e, cclRate);
-    let m = byMonthCat.get(e.billingMonth);
-    if (!m) {
-      m = new Map();
-      byMonthCat.set(e.billingMonth, m);
-    }
-    m.set(e.category, (m.get(e.category) ?? 0) + ars);
-    globalCat.set(e.category, (globalCat.get(e.category) ?? 0) + ars);
-  }
-
-  // Rank categories by total spend; the top N keep their own color/segment.
-  const ranked = [...globalCat.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([c]) => c);
-  const top = ranked.slice(0, MAX_STACK_CATEGORIES);
-  const topSet = new Set(top);
-  const hasOverflow = ranked.length > top.length;
-
-  const displayed = [...top];
-  if (hasOverflow && !topSet.has(OTROS_BUCKET)) displayed.push(OTROS_BUCKET);
-
-  const colorOf = new Map<string, { light: string; dark: string }>();
-  let ci = 0;
-  for (const c of displayed) colorOf.set(c, c === OTROS_BUCKET ? OTHER_BUCKET_COLOR : tickerColor(ci++));
-
-  const months = [...byMonthCat.keys()].sort();
-  return months.map((month) => {
-    const cats = byMonthCat.get(month)!;
-    const folded = new Map<string, number>();
-    for (const [cat, amt] of cats) {
-      const key = topSet.has(cat) ? cat : OTROS_BUCKET;
-      folded.set(key, (folded.get(key) ?? 0) + amt);
-    }
-    const segments = displayed
-      .map((cat) => ({ category: cat, amountArs: folded.get(cat) ?? 0, ...colorOf.get(cat)! }))
-      .filter((s) => s.amountArs > 0);
-    const total = segments.reduce((s, x) => s + x.amountArs, 0);
-    return { month, total, segments };
-  });
 }
 
 export type CategoryDetail = {
