@@ -31,10 +31,13 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
 
   const top = positive.slice(0, MAX_SLICES);
   const rest = positive.slice(MAX_SLICES);
-  // "Resto", not "Otros": there is a real category called Otros, and two rows
-  // reading "Otros" in the same legend is unreadable.
+  // Beyond MAX_SLICES the tail is folded into one wedge. It says what it is —
+  // "Otras 4 categorías" — because a bare "Resto (4)" explains nothing, and
+  // plain "Otros" would collide with the real category of that name.
+  const restLabel = rest.length === 1 ? "Otra categoría" : `Otras ${rest.length} categorías`;
+  const restNames = rest.map((r) => r.category).join(", ");
   const display = rest.length
-    ? [...top, { category: `Resto (${rest.length})`, amountArs: rest.reduce((s, r) => s + r.amountArs, 0) }]
+    ? [...top, { category: restLabel, amountArs: rest.reduce((s, r) => s + r.amountArs, 0) }]
     : top;
   const total = display.reduce((s, d) => s + d.amountArs, 0);
 
@@ -110,6 +113,12 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
                     {((d.amountArs / total) * 100).toFixed(0)}%
                   </span>
                 </span>
+                {/* Name the folded categories, so the bucket isn't a mystery. */}
+                {d.category === restLabel && (
+                  <span className="mt-0.5 line-clamp-2 block text-[11px] text-neutral-400 dark:text-neutral-500">
+                    {restNames}
+                  </span>
+                )}
               </span>
             </>
           );
