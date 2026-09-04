@@ -5,10 +5,13 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import * as schema from "../src/lib/db/schema";
 
 const RESET = process.argv.includes("--reset");
+const emailIdx = process.argv.indexOf("--user");
+const USER_EMAIL = emailIdx >= 0 ? process.argv[emailIdx + 1]?.toLowerCase() : undefined;
+if (!USER_EMAIL) throw new Error("Usá: npm run seed -- --user <email> [--reset]");
 
 if (!process.env.DIRECT_URL) {
   throw new Error("DIRECT_URL is not set — copy .env.example to .env.local and fill it in.");
@@ -58,9 +61,14 @@ async function main() {
     return;
   }
 
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, USER_EMAIL!));
+  if (!user) throw new Error(`No existe el usuario ${USER_EMAIL}`);
+  const userId = user.id;
+
   if (RESET) {
-    await db.execute(sql`TRUNCATE TABLE ${schema.transactions}`);
-    console.log("Tabla transactions vaciada.");
+    // Scoped, so seeding one account can't wipe another's history.
+    await db.delete(schema.transactions).where(eq(schema.transactions.userId, userId));
+    console.log(`Transacciones de ${USER_EMAIL} borradas.`);
   }
 
   const csvPath = path.join(__dirname, "seed-data.csv");
@@ -71,6 +79,7 @@ async function main() {
     const cclRate = parseNumber(row.cclRate);
 
     await db.insert(schema.transactions).values({
+      userId,
       ticker: row.ticker,
       type: row.type,
       tradeDate: isoDate,

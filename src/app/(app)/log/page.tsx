@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireUserId } from "@/lib/auth/session";
 import { listTransactions } from "@/lib/db/transactions";
 import { toDomainTransaction } from "@/lib/domain/types";
 import { computeRealizedBySellId, computeTransactionRowMetrics } from "@/lib/domain/position";
@@ -33,7 +34,8 @@ const SORTS: { label: string; sort: TradeFilters["sort"]; dir: TradeFilters["dir
 ];
 
 export default async function LogPage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
-  const [rows, raw] = await Promise.all([listTransactions(), searchParams]);
+  const userId = await requireUserId();
+  const [rows, raw] = await Promise.all([listTransactions(userId), searchParams]);
   const transactions = rows.map(toDomainTransaction);
 
   if (transactions.length === 0) {

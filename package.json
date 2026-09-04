@@ -11,7 +11,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "seed": "tsx scripts/seed.ts",
-    "check-prices": "tsx scripts/dev-check-prices.ts"
+    "check-prices": "tsx scripts/dev-check-prices.ts",
+    "seed:categories": "tsx scripts/seed-categories.ts",
+    "user:set-password": "tsx scripts/set-password.ts"
   },
   "dependencies": {
     "date-fns": "^4.4.0",

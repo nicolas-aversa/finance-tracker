@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireUserId } from "@/lib/auth/session";
 import { getCategories, listExpenses } from "@/lib/db/expenses";
 import { safeCcl } from "@/lib/prices/safe-ccl";
 import { toDomainExpense } from "@/lib/expenses/types";
@@ -39,9 +40,10 @@ const SORTS: { label: string; sort: "fecha" | "monto"; dir: "asc" | "desc" }[] =
 ];
 
 export default async function MovimientosPage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
+  const userId = await requireUserId();
   const [rows, categories, ccl, raw] = await Promise.all([
-    listExpenses(),
-    getCategories(),
+    listExpenses(userId),
+    getCategories(userId),
     safeCcl(),
     searchParams,
   ]);

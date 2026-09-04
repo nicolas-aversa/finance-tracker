@@ -1,3 +1,4 @@
+import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "./client";
 import { priceOverrides } from "./schema";

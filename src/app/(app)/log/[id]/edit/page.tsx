@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { requireUserId } from "@/lib/auth/session";
 import { getTransaction, listTransactions } from "@/lib/db/transactions";
 import { toDomainTransaction } from "@/lib/domain/types";
 import { computeHeldTickers } from "@/lib/domain/dashboard";
@@ -9,11 +10,13 @@ import { updateTransactionAction, deleteTransactionAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function EditTransactionPage({ params }: { params: Promise<{ id: string }> }) {
+  const userId = await requireUserId();
   const { id } = await params;
-  const transaction = await getTransaction(id);
+  // Scoped, so another user's transaction is a 404 rather than an edit form.
+  const transaction = await getTransaction(userId, id);
   if (!transaction) notFound();
 
-  const allTransactions = await listTransactions();
+  const allTransactions = await listTransactions(userId);
   // Held tickers plus this transaction's own ticker, so it stays selectable
   // in the dropdown even if the position is now closed.
   const tickerOptions = [

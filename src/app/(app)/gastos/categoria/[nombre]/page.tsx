@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireUserId } from "@/lib/auth/session";
 import { notFound } from "next/navigation";
 import { listExpenses } from "@/lib/db/expenses";
 import { listBudgets } from "@/lib/db/budgets";
@@ -39,9 +40,10 @@ export default async function CategoriaPage({
   params: Promise<{ nombre: string }>;
   searchParams: Promise<{ mes?: string }>;
 }) {
+  const userId = await requireUserId();
   const [rows, budgets, ccl, { nombre }, { mes }] = await Promise.all([
-    listExpenses(),
-    listBudgets(),
+    listExpenses(userId),
+    listBudgets(userId),
     safeCcl(),
     params,
     searchParams,

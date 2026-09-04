@@ -1,4 +1,5 @@
 import { listTransactions } from "@/lib/db/transactions";
+import { requireUserId } from "@/lib/auth/session";
 import { toDomainTransaction } from "@/lib/domain/types";
 import { computeHeldTickers } from "@/lib/domain/dashboard";
 import { TransactionForm } from "@/components/TransactionForm";
@@ -7,7 +8,8 @@ import { PageHeader } from "@/components/PageHeader";
 export const dynamic = "force-dynamic";
 
 export default async function AddPage() {
-  const rows = await listTransactions();
+  const userId = await requireUserId();
+  const rows = await listTransactions(userId);
   const heldTickers = computeHeldTickers(rows.map(toDomainTransaction));
 
   return (

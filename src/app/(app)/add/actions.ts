@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
+import { requireUserId } from "@/lib/auth/session";
 import { createTransaction } from "@/lib/db/transactions";
 
 const TransactionSchema = z.object({
@@ -38,7 +39,8 @@ export async function createTransactionAction(
 
   const { ticker, type, tradeDate, cclRate, arsPrice, qty } = parsed.data;
 
-  await createTransaction({
+  const userId = await requireUserId();
+  await createTransaction(userId, {
     ticker,
     type,
     tradeDate,

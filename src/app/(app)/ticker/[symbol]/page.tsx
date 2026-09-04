@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireUserId } from "@/lib/auth/session";
 import { notFound } from "next/navigation";
 import { listTransactions } from "@/lib/db/transactions";
 import { toDomainTransaction } from "@/lib/domain/types";
@@ -31,7 +32,8 @@ function Tile({ label, value, sub, money }: { label: string; value: string; sub?
 }
 
 export default async function TickerPage({ params }: { params: Promise<{ symbol: string }> }) {
-  const [rows, { symbol }] = await Promise.all([listTransactions(), params]);
+  const userId = await requireUserId();
+  const [rows, { symbol }] = await Promise.all([listTransactions(userId), params]);
   const ticker = decodeURIComponent(symbol).toUpperCase();
   const transactions = rows.map(toDomainTransaction);
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
@@ -12,36 +12,32 @@ function getSecretKey(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export function passcodeMatches(input: string): boolean {
-  const expected = process.env.APP_PASSCODE;
-  if (!expected) throw new Error("APP_PASSCODE is not set");
-  // Hash both sides first: timingSafeEqual throws on length mismatch, hashing
-  // normalizes length and avoids leaking the passcode's length via timing.
-  const inputHash = createHash("sha256").update(input).digest();
-  const expectedHash = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(inputHash, expectedHash);
-}
-
-async function encryptSession(): Promise<string> {
-  return new SignJWT({ authed: true })
+/**
+ * The session carries *who* you are, not just *that* you're in. Everything
+ * below keys off `sub`, and every query in the app scopes by it — so a token
+ * without a subject is worthless rather than dangerous.
+ */
+async function encryptSession(userId: string): Promise<string> {
+  return new SignJWT({})
     .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(`${SESSION_DURATION_MS / 1000}s`)
     .sign(getSecretKey());
 }
 
-async function decryptSession(token: string | undefined): Promise<boolean> {
-  if (!token) return false;
+async function decryptSession(token: string | undefined): Promise<string | null> {
+  if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecretKey(), { algorithms: ["HS256"] });
-    return payload.authed === true;
+    return typeof payload.sub === "string" && payload.sub.length > 0 ? payload.sub : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-export async function createSession(): Promise<void> {
-  const token = await encryptSession();
+export async function createSession(userId: string): Promise<void> {
+  const token = await encryptSession(userId);
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -57,13 +53,26 @@ export async function destroySession(): Promise<void> {
   cookieStore.delete(COOKIE_NAME);
 }
 
-export async function verifySession(): Promise<boolean> {
+/** The signed-in user's id, or null. */
+export async function getSessionUserId(): Promise<string | null> {
   const cookieStore = await cookies();
   return decryptSession(cookieStore.get(COOKIE_NAME)?.value);
 }
 
 export const SESSION_COOKIE_NAME = COOKIE_NAME;
 
-export async function verifySessionToken(token: string | undefined): Promise<boolean> {
+/** Used by the proxy, which has the raw token rather than the cookie store. */
+export async function verifySessionToken(token: string | undefined): Promise<string | null> {
   return decryptSession(token);
+}
+
+/**
+ * Every authenticated page and server action starts here. Resolving identity
+ * per request — instead of trusting a header set by the proxy — keeps the
+ * middleware from becoming a place where a forged header grants access.
+ */
+export async function requireUserId(): Promise<string> {
+  const userId = await getSessionUserId();
+  if (!userId) redirect("/login");
+  return userId;
 }

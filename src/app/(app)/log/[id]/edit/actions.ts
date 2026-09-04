@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
+import { requireUserId } from "@/lib/auth/session";
 import { deleteTransaction, updateTransaction } from "@/lib/db/transactions";
 
 const TransactionSchema = z.object({
@@ -39,7 +40,10 @@ export async function updateTransactionAction(
 
   const { ticker, type, tradeDate, cclRate, arsPrice, qty } = parsed.data;
 
-  await updateTransaction(id, {
+  // Scoped by owner: these actions can be invoked with any id, so the filter
+  // — not the bound argument — is what stops someone editing another's row.
+  const userId = await requireUserId();
+  await updateTransaction(userId, id, {
     ticker,
     type,
     tradeDate,
@@ -52,6 +56,7 @@ export async function updateTransactionAction(
 }
 
 export async function deleteTransactionAction(id: string): Promise<void> {
-  await deleteTransaction(id);
+  const userId = await requireUserId();
+  await deleteTransaction(userId, id);
   redirect("/log");
 }

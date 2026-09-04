@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireUserId } from "@/lib/auth/session";
 import { listExpenses, listImports } from "@/lib/db/expenses";
 import { listBudgets } from "@/lib/db/budgets";
 import { listIncome } from "@/lib/db/income";
@@ -22,11 +23,12 @@ import { EmptyState } from "@/components/EmptyState";
 export const dynamic = "force-dynamic";
 
 export default async function GastosPage({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
+  const userId = await requireUserId();
   const [rows, imports, budgets, income, ccl, { mes }] = await Promise.all([
-    listExpenses(),
-    listImports(),
-    listBudgets(),
-    listIncome(),
+    listExpenses(userId),
+    listImports(userId),
+    listBudgets(userId),
+    listIncome(userId),
     safeCcl(),
     searchParams,
   ]);

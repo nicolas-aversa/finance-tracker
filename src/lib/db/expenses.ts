@@ -41,17 +41,29 @@ function categoryForMovement(
  * its categorized movements. All in one transaction, so a re-upload replaces
  * rather than duplicates.
  */
-export async function saveStatement(parsed: ParsedStatement, fileName: string): Promise<SaveStatementResult> {
-  const rules = await getCategoryRules();
+export async function saveStatement(
+  userId: string,
+  parsed: ParsedStatement,
+  fileName: string
+): Promise<SaveStatementResult> {
+  const rules = await getCategoryRules(userId);
 
   return db.transaction(async (tx) => {
     const existing = await tx
       .select({ id: expenseImports.id })
       .from(expenseImports)
-      .where(and(eq(expenseImports.source, parsed.source), eq(expenseImports.statementPeriod, parsed.statementPeriod)));
+      .where(
+        and(
+          eq(expenseImports.userId, userId),
+          eq(expenseImports.source, parsed.source),
+          eq(expenseImports.statementPeriod, parsed.statementPeriod)
+        )
+      );
     const replaced = existing.length > 0;
     if (replaced) {
-      await tx.delete(expenseImports).where(eq(expenseImports.id, existing[0].id));
+      await tx
+        .delete(expenseImports)
+        .where(and(eq(expenseImports.userId, userId), eq(expenseImports.id, existing[0].id)));
     }
 
     // Reconciliation: opening balance + Σ(signed movements) should equal the
@@ -71,6 +83,7 @@ export async function saveStatement(parsed: ParsedStatement, fileName: string): 
     const [imp] = await tx
       .insert(expenseImports)
       .values({
+        userId,
         source: parsed.source,
         statementPeriod: parsed.statementPeriod,
         fileName,
@@ -88,6 +101,7 @@ export async function saveStatement(parsed: ParsedStatement, fileName: string): 
         parsed.movements.map((m) => {
           const merchant = normalizeMerchant(m.merchant ?? m.description);
           return {
+            userId,
             importId: imp.id,
             source: parsed.source,
             txDate: m.date,
@@ -120,12 +134,16 @@ export async function saveStatement(parsed: ParsedStatement, fileName: string): 
   });
 }
 
-export async function listExpenses(): Promise<Expense[]> {
-  return db.select().from(expenses).orderBy(desc(expenses.txDate));
+export async function listExpenses(userId: string): Promise<Expense[]> {
+  return db.select().from(expenses).where(eq(expenses.userId, userId)).orderBy(desc(expenses.txDate));
 }
 
-export async function listImports(): Promise<ExpenseImport[]> {
-  return db.select().from(expenseImports).orderBy(desc(expenseImports.statementPeriod));
+export async function listImports(userId: string): Promise<ExpenseImport[]> {
+  return db
+    .select()
+    .from(expenseImports)
+    .where(eq(expenseImports.userId, userId))
+    .orderBy(desc(expenseImports.statementPeriod));
 }
 
 /**
@@ -141,13 +159,19 @@ export async function listImports(): Promise<ExpenseImport[]> {
  *
  * Returns how many rows changed, so the UI can say when it touched more than one.
  */
-export async function updateExpenseCategory(id: string, category: string): Promise<number> {
-  const [row] = await db.select().from(expenses).where(eq(expenses.id, id));
+export async function updateExpenseCategory(userId: string, id: string, category: string): Promise<number> {
+  const [row] = await db
+    .select()
+    .from(expenses)
+    .where(and(eq(expenses.userId, userId), eq(expenses.id, id)));
   if (!row) return 0;
 
   const isInstallment = row.installmentTotal !== null && row.installmentTotal > 1 && row.installmentCurrent !== null;
   if (!isInstallment || !row.billingMonth) {
-    await db.update(expenses).set({ category, updatedAt: new Date() }).where(eq(expenses.id, id));
+    await db
+      .update(expenses)
+      .set({ category, updatedAt: new Date() })
+      .where(and(eq(expenses.userId, userId), eq(expenses.id, id)));
     return 1;
   }
 
@@ -159,6 +183,7 @@ export async function updateExpenseCategory(id: string, category: string): Promi
     .set({ category, updatedAt: new Date() })
     .where(
       and(
+        eq(expenses.userId, userId),
         eq(expenses.source, row.source),
         eq(expenses.merchant, row.merchant),
         eq(expenses.installmentTotal, row.installmentTotal!),
@@ -173,16 +198,24 @@ export async function updateExpenseCategory(id: string, category: string): Promi
   return updated.length;
 }
 
-export async function deleteExpense(id: string): Promise<void> {
-  await db.delete(expenses).where(eq(expenses.id, id));
+export async function deleteExpense(userId: string, id: string): Promise<void> {
+  await db.delete(expenses).where(and(eq(expenses.userId, userId), eq(expenses.id, id)));
 }
 
-export async function getCategories(): Promise<{ name: string; emoji: string }[]> {
-  const rows = await db.select().from(expenseCategories).orderBy(expenseCategories.sort);
+export async function getCategories(userId: string): Promise<{ name: string; emoji: string }[]> {
+  const rows = await db
+    .select()
+    .from(expenseCategories)
+    .where(eq(expenseCategories.userId, userId))
+    .orderBy(expenseCategories.sort);
   return rows.map((r) => ({ name: r.name, emoji: r.emoji }));
 }
 
-export async function getCategoryRules(): Promise<CategoryRule[]> {
-  const rows = await db.select().from(categoryRules).orderBy(desc(categoryRules.priority));
+export async function getCategoryRules(userId: string): Promise<CategoryRule[]> {
+  const rows = await db
+    .select()
+    .from(categoryRules)
+    .where(eq(categoryRules.userId, userId))
+    .orderBy(desc(categoryRules.priority));
   return rows.map((r) => ({ pattern: r.pattern, category: r.category, priority: r.priority }));
 }

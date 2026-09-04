@@ -54,7 +54,13 @@ export async function getManyCached(specs: CacheSpec<unknown>[]): Promise<Batche
       const spec = misses[i];
       if (result.status === "fulfilled") {
         values.set(spec.key, result.value);
-        toWrite.push({ key: spec.key, value: result.value });
+        // A fetch can succeed and still have nothing to say — the source simply
+        // doesn't carry that ticker. Caching that as NULL violates the column
+        // and 500s the page for every ticker the feed doesn't know, so an empty
+        // result is treated as a miss rather than persisted.
+        if (result.value !== undefined && result.value !== null) {
+          toWrite.push({ key: spec.key, value: result.value });
+        }
       } else {
         errors.set(spec.key, result.reason);
         // Fall back to a stale cached value if one exists — better than nothing.

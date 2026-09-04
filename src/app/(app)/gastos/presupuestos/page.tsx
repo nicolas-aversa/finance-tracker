@@ -1,4 +1,5 @@
 import { listBudgets } from "@/lib/db/budgets";
+import { requireUserId } from "@/lib/auth/session";
 import { listIncome } from "@/lib/db/income";
 import { getCategories, listExpenses } from "@/lib/db/expenses";
 import { safeCcl } from "@/lib/prices/safe-ccl";
@@ -12,11 +13,12 @@ import { IncomeForm } from "@/components/expenses/IncomeForm";
 export const dynamic = "force-dynamic";
 
 export default async function PresupuestosPage() {
+  const userId = await requireUserId();
   const [rows, categories, budgets, income, ccl] = await Promise.all([
-    listExpenses(),
-    getCategories(),
-    listBudgets(),
-    listIncome(),
+    listExpenses(userId),
+    getCategories(userId),
+    listBudgets(userId),
+    listIncome(userId),
     safeCcl(),
   ]);
   const expenses = rows.map(toDomainExpense);

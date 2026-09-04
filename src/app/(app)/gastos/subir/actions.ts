@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { parseStatementPdf } from "@/lib/expenses/parsers";
+import { requireUserId } from "@/lib/auth/session";
 import { saveStatement, type SaveStatementResult } from "@/lib/db/expenses";
 
 export type UploadOutcome =
@@ -10,14 +11,14 @@ export type UploadOutcome =
 
 export type UploadState = { results: UploadOutcome[] } | { error: string } | undefined;
 
-async function processOne(file: File): Promise<UploadOutcome> {
+async function processOne(userId: string, file: File): Promise<UploadOutcome> {
   if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
     return { fileName: file.name, error: "No es un PDF." };
   }
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const parsed = await parseStatementPdf(bytes);
-    return { fileName: file.name, ok: await saveStatement(parsed, file.name) };
+    return { fileName: file.name, ok: await saveStatement(userId, parsed, file.name) };
   } catch (err) {
     return { fileName: file.name, error: err instanceof Error ? err.message : "No se pudo procesar." };
   }
@@ -35,8 +36,9 @@ export async function uploadStatements(_prev: UploadState, formData: FormData): 
   const files = formData.getAll("file").filter((f): f is File => f instanceof File && f.size > 0);
   if (files.length === 0) return { error: "Elegí al menos un PDF." };
 
+  const userId = await requireUserId();
   const results: UploadOutcome[] = [];
-  for (const file of files) results.push(await processOne(file));
+  for (const file of files) results.push(await processOne(userId, file));
 
   revalidatePath("/gastos");
   revalidatePath("/gastos/movimientos");
