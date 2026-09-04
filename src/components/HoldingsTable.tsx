@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { TickerRow } from "@/lib/domain/dashboard";
 import { tickerColor } from "@/lib/domain/chart-colors";
 import { formatPercent, formatPercentSigned, formatQty, formatUsd, formatUsdSigned } from "@/lib/format";
@@ -18,9 +19,10 @@ export function HoldingsTable({ rows }: { rows: TickerRow[] }) {
           const color = tickerColor(i);
           const weight = row.weightPct ?? 0;
           return (
-            <div
+            <Link
               key={row.ticker}
-              className="rounded-2xl border border-neutral-100 p-3 dark:border-neutral-800"
+              href={`/ticker/${encodeURIComponent(row.ticker)}`}
+              className="block rounded-2xl border border-neutral-100 p-3 transition-colors hover:border-accent dark:border-neutral-800 dark:hover:border-accent"
             >
               {/* Header: ticker + value + weight badge */}
               <div className="flex items-center justify-between gap-3">
@@ -80,7 +82,7 @@ export function HoldingsTable({ rows }: { rows: TickerRow[] }) {
                   </div>
                 )}
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>

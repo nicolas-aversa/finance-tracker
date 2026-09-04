@@ -1,31 +1,33 @@
 import Link from "next/link";
-import { buildHref, type ExpenseFilters } from "@/lib/expenses/filters";
 
 export type DropdownOption = { value: string; label: string };
 
 /**
- * Multi-select filter as a dropdown. A <details> holding toggle links rather
- * than a <select>: each option applies on tap, keeping the page server-driven
- * with no submit and no client state, and several can be on at once.
+ * Multi-select filter as a dropdown, shared by both sections.
+ *
+ * It knows nothing about what is being filtered: the caller passes `hrefFor`,
+ * which turns a next selection into a URL. A <details> holding links rather
+ * than a <select> keeps every page server-driven — options apply on tap, with
+ * no submit and no client state.
+ *
+ * The menu is anchored to the *control row*, which must be `relative`: a
+ * fixed-width menu hanging off a middle or right column runs off one side or
+ * the other on a narrow screen.
  */
 export function FilterDropdown({
-  basePath,
-  filters,
   options,
   selected,
   label,
   allLabel,
-  patchFor,
+  hrefFor,
 }: {
-  basePath: string;
-  filters: ExpenseFilters;
   options: DropdownOption[];
   selected: string[];
   /** Shown on the button when nothing is selected. */
   label: string;
   /** The reset row inside the menu. */
   allLabel: string;
-  patchFor: (next: string[]) => Partial<ExpenseFilters>;
+  hrefFor: (next: string[]) => string;
 }) {
   if (options.length === 0) return null;
 
@@ -50,12 +52,9 @@ export function FilterDropdown({
         <span aria-hidden className={active ? "text-accent" : "text-neutral-400"}>▾</span>
       </summary>
 
-      {/* Anchored to the control row (which is `relative`), not to this column:
-          a fixed-width menu hanging off a middle or right column runs off one
-          side or the other on a narrow screen. Spanning the row always fits. */}
       <div className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-y-auto overscroll-contain rounded-2xl border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
         <Link
-          href={buildHref(basePath, filters, patchFor([]))}
+          href={hrefFor([])}
           scroll={false}
           className={`block px-4 py-2 text-sm transition-colors ${
             !active
@@ -72,7 +71,7 @@ export function FilterDropdown({
           return (
             <Link
               key={o.value}
-              href={buildHref(basePath, filters, patchFor(next))}
+              href={hrefFor(next)}
               scroll={false}
               aria-pressed={on}
               className={`flex items-center justify-between gap-2 px-4 py-2 text-sm transition-colors ${

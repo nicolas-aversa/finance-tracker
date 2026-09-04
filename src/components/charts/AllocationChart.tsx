@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { TickerRow } from "@/lib/domain/dashboard";
 import { OTHER_BUCKET_COLOR, tickerColor } from "@/lib/domain/chart-colors";
 import { formatUsd } from "@/lib/format";
@@ -67,7 +68,8 @@ export function AllocationChart({ rows }: { rows: TickerRow[] }) {
 
       <ul className="mt-4 flex flex-col gap-2">
         {slices.map((s) => (
-          <li key={s.key} className="flex items-center gap-2 text-sm">
+          <li key={s.key}>
+            <RowShell href={s.key === "__other__" ? null : `/ticker/${encodeURIComponent(s.label)}`}>
             <span
               className="viz-mark h-2.5 w-2.5 shrink-0 rounded-full"
               style={{
@@ -81,9 +83,38 @@ export function AllocationChart({ rows }: { rows: TickerRow[] }) {
             <span className="w-11 text-right tabular-nums text-neutral-400 dark:text-neutral-500">
               {pct(s.valueUsd).toFixed(0)}%
             </span>
+            </RowShell>
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+/** A bordered row with a chevron reads as tappable; the "Otros" bucket is inert. */
+function RowShell({ href, children }: { href: string | null; children: React.ReactNode }) {
+  if (!href) {
+    return (
+      <span className="flex items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-sm">
+        {children}
+        <span aria-hidden className="w-5 shrink-0" />
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50/60 px-3 py-2 text-sm transition-colors hover:border-accent hover:bg-accent-soft dark:border-neutral-800 dark:bg-neutral-800/40 dark:hover:border-accent"
+    >
+      {children}
+      <span
+        aria-hidden
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-neutral-300 text-neutral-500 dark:border-neutral-600 dark:text-neutral-400"
+      >
+        <svg viewBox="0 0 20 20" fill="none" className="h-3 w-3">
+          <path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+    </Link>
   );
 }
