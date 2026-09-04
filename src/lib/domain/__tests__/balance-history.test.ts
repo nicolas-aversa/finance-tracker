@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeBalanceHistory } from "../balance-history";
+import { computeBalanceHistory, computeInvestedHistory } from "../balance-history";
 import type { DomainTransaction } from "../types";
 
 function tx(overrides: Partial<DomainTransaction>): DomainTransaction {
@@ -111,5 +111,42 @@ describe("computeBalanceHistory", () => {
       const points = computeBalanceHistory([buy], {}, ccl);
       expect(points.find((p) => p.date === "2026-01-05")!.valueUsd).toBeCloseTo((10 * 10000) / 1500, 6);
     });
+  });
+});
+
+describe("computeInvestedHistory", () => {
+  const axis = [
+    { date: "2026-01-01", valueUsd: 0 },
+    { date: "2026-01-02", valueUsd: 0 },
+    { date: "2026-01-05", valueUsd: 0 },
+    { date: "2026-01-06", valueUsd: 0 },
+  ];
+
+  it("accumulates buys and nets out sells", () => {
+    const flows = new Map([
+      ["2026-01-01", 100],
+      ["2026-01-05", 50],
+      ["2026-01-06", -30],
+    ]);
+    expect(computeInvestedHistory(axis, flows)).toEqual([
+      { date: "2026-01-01", investedUsd: 100 },
+      { date: "2026-01-02", investedUsd: 100 },
+      { date: "2026-01-05", investedUsd: 150 },
+      { date: "2026-01-06", investedUsd: 120 },
+    ]);
+  });
+
+  it("counts a flow that falls on a day the axis has no quote for", () => {
+    // 2026-01-03 is a weekend: no price quote, but the money moved that day.
+    const flows = new Map([["2026-01-03", 200]]);
+    expect(computeInvestedHistory(axis, flows).map((p) => p.investedUsd)).toEqual([0, 0, 200, 200]);
+  });
+
+  it("is flat at zero with no flows", () => {
+    expect(computeInvestedHistory(axis, new Map()).map((p) => p.investedUsd)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("returns nothing for an empty axis", () => {
+    expect(computeInvestedHistory([], new Map([["2026-01-01", 100]]))).toEqual([]);
   });
 });

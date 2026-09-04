@@ -1,6 +1,7 @@
 import type { DomainTransaction } from "./types";
 
 export type BalancePoint = { date: string; valueUsd: number };
+export type InvestedPoint = { date: string; investedUsd: number };
 export type PriceSeriesPoint = { date: string; close: number };
 export type RateSeriesPoint = { date: string; rate: number };
 
@@ -106,5 +107,29 @@ export function computeBalanceHistory(
     }
 
     return { date, valueUsd };
+  });
+}
+
+/**
+ * Cumulative net capital put in (USD) on the same date axis as the balance:
+ * buys add, sells take out. Plotted under the portfolio value, the gap between
+ * the two lines *is* the gain — which is the one thing neither the benchmark
+ * (relative, in %) nor the holdings list (a snapshot) shows.
+ *
+ * Flows are accumulated by "everything up to this date" rather than looked up
+ * per date, because a trade can fall on a day the price axis has no quote for
+ * (a weekend, a holiday) and must still count from then on.
+ */
+export function computeInvestedHistory(
+  balanceHistory: BalancePoint[],
+  cashflowByDate: Map<string, number>
+): InvestedPoint[] {
+  const flows = [...cashflowByDate.entries()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+
+  let i = 0;
+  let cumulative = 0;
+  return balanceHistory.map(({ date }) => {
+    while (i < flows.length && flows[i][0] <= date) cumulative += flows[i++][1];
+    return { date, investedUsd: cumulative };
   });
 }

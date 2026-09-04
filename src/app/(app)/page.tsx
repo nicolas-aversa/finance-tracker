@@ -1,14 +1,15 @@
 import Link from "next/link";
+import { EmptyState } from "@/components/EmptyState";
 import { listTransactions } from "@/lib/db/transactions";
 import { toDomainTransaction } from "@/lib/domain/types";
 import { computeAllTickerRows, computePortfolioTotals } from "@/lib/domain/dashboard";
 import { computeBalanceHistory } from "@/lib/domain/balance-history";
+import { computeInvestedHistory } from "@/lib/domain/balance-history";
 import { buildBenchmarkComparison, computePortfolioTwrSeries, netCashflowByDate } from "@/lib/domain/twr";
 import { getDashboardData } from "@/lib/prices";
 import { KpiHeader } from "@/components/KpiHeader";
 import { HoldingsTable } from "@/components/HoldingsTable";
-import { AllocationChart } from "@/components/charts/AllocationChart";
-import { PositionPnlChart } from "@/components/charts/PositionPnlChart";
+import { PortfolioValueChart } from "@/components/charts/PortfolioValueChart";
 import { BenchmarkChart } from "@/components/charts/BenchmarkChart";
 
 export const dynamic = "force-dynamic";
@@ -19,18 +20,12 @@ export default async function DashboardPage() {
 
   if (transactions.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 pt-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-accent-soft text-3xl">📊</div>
-        <div>
-          <p className="font-medium text-neutral-900 dark:text-neutral-100">Todavía no cargaste nada</p>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Cargá tu primera compra o venta para armar tu dashboard.
-          </p>
-        </div>
-        <Link href="/add" className="btn-accent px-6">
-          Cargar la primera
-        </Link>
-      </div>
+      <EmptyState
+        emoji="📊"
+        title="Todavía no cargaste nada"
+        hint="Cargá tu primera compra o venta para armar tu dashboard."
+        action={{ href: "/add", label: "Cargar la primera" }}
+      />
     );
   }
 
@@ -48,7 +43,9 @@ export default async function DashboardPage() {
     balanceSources.cedearHistoryByTicker,
     balanceSources.cclHistory
   );
-  const portfolioTwr = computePortfolioTwrSeries(balanceHistory, netCashflowByDate(transactions));
+  const cashflows = netCashflowByDate(transactions);
+  const investedHistory = computeInvestedHistory(balanceHistory, cashflows);
+  const portfolioTwr = computePortfolioTwrSeries(balanceHistory, cashflows);
   const benchmark = buildBenchmarkComparison(portfolioTwr, balanceSources.sp500History);
 
   const warnings = [...snapshot.warnings, ...balanceSources.warnings];
@@ -67,9 +64,12 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Three cards, three different questions: how much do I have and how
+          much of it did I put in; am I beating the market; what is it made of.
+          The allocation and per-position P&L charts were dropped — the holdings
+          list already carries both, weight bar and result per row. */}
+      <PortfolioValueChart balance={balanceHistory} invested={investedHistory} />
       <BenchmarkChart points={benchmark} />
-      <AllocationChart rows={tickerRows} />
-      <PositionPnlChart rows={tickerRows} />
       <HoldingsTable rows={tickerRows} />
 
       {closedCount > 0 && (
