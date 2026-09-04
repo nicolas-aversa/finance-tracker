@@ -9,7 +9,7 @@ export default function LoginPage() {
 
   return (
     <AuthCard
-      title="CEDEAR Tracker"
+      title="Finance Tracker"
       subtitle="Entrá con tu email y contraseña."
       footer={{ text: "¿No tenés cuenta?", href: "/signup", label: "Crear una" }}
     >

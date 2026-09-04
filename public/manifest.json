@@ -1,7 +1,7 @@
 {
-  "name": "CEDEAR Tracker",
-  "short_name": "CEDEARs",
-  "description": "Seguimiento de inversiones en CEDEARs",
+  "name": "Finance Tracker",
+  "short_name": "Finanzas",
+  "description": "Seguimiento de inversiones en CEDEARs y de gastos con tarjeta",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",

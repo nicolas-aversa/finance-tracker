@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CEDEAR Tracker",
-  description: "Seguimiento de inversiones en CEDEARs",
+  title: "Finance Tracker",
+  description: "Seguimiento de inversiones en CEDEARs y de gastos con tarjeta",
   manifest: "/manifest.json",
 };
 

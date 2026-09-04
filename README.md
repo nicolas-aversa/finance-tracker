@@ -1,4 +1,4 @@
-# CEDEAR Tracker
+# Finance Tracker
 
 App personal de finanzas, en dos secciones:
 
@@ -74,5 +74,7 @@ samples/              PDFs reales de ejemplo, usados por los tests de parsers
 - **Sin recuperación de contraseña**: no hay servicio de mail. Si alguien la olvida, se resetea con `npm run user:set-password`.
 
 ## Deploy
+
+En producción: **https://finance-tracker-ar.vercel.app**
 
 Conectado a GitHub: cada push a `main` dispara un deploy en Vercel. Región `gru1` (São Paulo), por cercanía a Supabase en `sa-east-1`.
