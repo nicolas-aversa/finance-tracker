@@ -14,7 +14,7 @@ import {
   type TradeFilters,
 } from "@/lib/domain/trade-filters";
 import { getMarketSnapshot } from "@/lib/prices";
-import { formatUsd } from "@/lib/format";
+import { formatUsd, formatUsdCompact } from "@/lib/format";
 import { TradeLogRow } from "@/components/TradeLogRow";
 import { FilterDropdown } from "@/components/FilterDropdown";
 import { SortMenu } from "@/components/SortMenu";
@@ -104,15 +104,26 @@ export default async function LogPage({ searchParams }: { searchParams: Promise<
         clearAllHref={buildTradeHref(BASE, clearedTradeFilters(filters))}
       />
 
-      <div className="flex items-baseline justify-between gap-2 px-1 text-xs text-neutral-500 dark:text-neutral-400">
-        <span>
+      {/* One line at 320px: the amounts drop their cents (the exact figures are
+          on every row, and the title carries them) so the three facts fit
+          side by side instead of wrapping. */}
+      <div className="flex items-baseline justify-between gap-2 px-1 text-[11px] text-neutral-500 dark:text-neutral-400">
+        <span className="whitespace-nowrap">
           {totals.count} {totals.count === 1 ? "operación" : "operaciones"}
         </span>
-        <span className="money tabular-nums font-medium text-neutral-700 dark:text-neutral-300">
-          {formatUsd(totals.boughtUsd)} comprado
+        <span className="flex items-baseline gap-1.5">
+          <span
+            className="money whitespace-nowrap tabular-nums font-medium text-neutral-700 dark:text-neutral-300"
+            title={`${formatUsd(totals.boughtUsd)} comprado`}
+          >
+            {formatUsdCompact(totals.boughtUsd)} comprado
+          </span>
           {totals.soldUsd > 0 && (
-            <span className="ml-1 font-normal text-neutral-400 dark:text-neutral-500">
-              · {formatUsd(totals.soldUsd)} vendido
+            <span
+              className="money whitespace-nowrap tabular-nums text-neutral-400 dark:text-neutral-500"
+              title={`${formatUsd(totals.soldUsd)} vendido`}
+            >
+              {formatUsdCompact(totals.soldUsd)} vendido
             </span>
           )}
         </span>

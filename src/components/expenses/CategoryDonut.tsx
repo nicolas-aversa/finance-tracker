@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronBadge } from "@/components/ChevronBadge";
 import { tickerColor } from "@/lib/domain/chart-colors";
 import { formatArs } from "@/lib/format";
 import type { CategorySlice } from "@/lib/expenses/aggregate";
@@ -115,20 +116,7 @@ export function CategoryDonut({ slices, hrefs }: { slices: CategorySlice[]; href
                   className="flex items-start gap-2 rounded-xl border border-neutral-200 bg-neutral-50/60 px-3 py-2 text-sm transition-colors hover:border-accent hover:bg-accent-soft dark:border-neutral-800 dark:bg-neutral-800/40 dark:hover:border-accent"
                 >
                   {row}
-                  <span
-                    aria-hidden
-                    className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-neutral-300 text-neutral-500 dark:border-neutral-600 dark:text-neutral-400"
-                  >
-                    <svg viewBox="0 0 20 20" fill="none" className="h-3 w-3">
-                      <path
-                        d="M7.5 4.5l6 5.5-6 5.5"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
+                  <ChevronBadge className="mt-1" />
                 </Link>
               ) : (
                 <span className="flex items-start gap-2 rounded-xl border border-transparent px-3 py-2 text-sm">

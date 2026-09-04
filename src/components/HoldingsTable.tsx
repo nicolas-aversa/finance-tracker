@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronBadge } from "./ChevronBadge";
 import type { TickerRow } from "@/lib/domain/dashboard";
 import { tickerColor } from "@/lib/domain/chart-colors";
 import { formatPercent, formatPercentSigned, formatQty, formatUsd, formatUsdSigned } from "@/lib/format";
@@ -22,7 +23,7 @@ export function HoldingsTable({ rows }: { rows: TickerRow[] }) {
             <Link
               key={row.ticker}
               href={`/ticker/${encodeURIComponent(row.ticker)}`}
-              className="block rounded-2xl border border-neutral-100 p-3 transition-colors hover:border-accent dark:border-neutral-800 dark:hover:border-accent"
+              className="block rounded-2xl border border-neutral-100 bg-neutral-50/60 p-3 transition-colors hover:border-accent hover:bg-accent-soft dark:border-neutral-800 dark:bg-neutral-800/40 dark:hover:border-accent"
             >
               {/* Header: ticker + value + weight badge */}
               <div className="flex items-center justify-between gap-3">
@@ -40,9 +41,12 @@ export function HoldingsTable({ rows }: { rows: TickerRow[] }) {
                     {formatPercent(row.weightPct)}
                   </span>
                 </div>
-                <span className="text-base font-semibold money tabular-nums text-neutral-900 dark:text-neutral-100">
-                  {formatUsd(row.marketValueUsd)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-semibold money tabular-nums text-neutral-900 dark:text-neutral-100">
+                    {formatUsd(row.marketValueUsd)}
+                  </span>
+                  <ChevronBadge />
+                </div>
               </div>
 
               {/* Weight bar */}
