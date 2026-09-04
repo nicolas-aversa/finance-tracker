@@ -71,6 +71,7 @@ samples/              PDFs reales de ejemplo, usados por los tests de parsers
 - **Filtros en la URL**: la sección de gastos no usa estado de cliente. Los filtros viven en el querystring, se parsean en el server con `parseExpenseFilters` y se aplican con funciones puras. Cada vista es compartible y funciona sin JS.
 - **Presupuestos recurrentes**: un límite mensual por categoría, que se repite todos los meses (no hay override por mes).
 - **Un usuario por cuenta**: todas las tablas de datos llevan `user_id` y toda consulta filtra por él. Ese filtro es el límite de privacidad de la app, y `src/lib/db/__tests__/user-scoping.test.ts` verifica mecánicamente que ninguna función se lo olvide. Las cachés de precios y el histórico de CCL son datos de mercado y quedan compartidos.
+- **La base no se atiende sola**: Supabase publica el schema `public` por PostgREST y, por sus privilegios por defecto, cada tabla nacía legible y escribible para el rol `anon` — la clave que Supabase considera pública. Eso esquivaba el filtro por `user_id` por completo. La migración `0007` revoca esos permisos, prende RLS sin políticas en las 12 tablas y cambia los DEFAULT PRIVILEGES para que la próxima tabla no nazca expuesta. La app no se entera: se conecta como `postgres`, dueño de las tablas, y el dueño saltea RLS.
 - **Sin recuperación de contraseña**: no hay servicio de mail. Si alguien la olvida, se resetea con `npm run user:set-password`.
 
 ## Deploy

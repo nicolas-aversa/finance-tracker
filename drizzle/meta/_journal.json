@@ -50,6 +50,13 @@
       "when": 1788546025890,
       "tag": "0006_wonderful_snowbird",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788552656009,
+      "tag": "0007_secure_public_api",
+      "breakpoints": true
     }
   ]
 }
